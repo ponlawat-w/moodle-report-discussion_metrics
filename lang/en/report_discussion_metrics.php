@@ -29,7 +29,7 @@ $string['discussion_metrics:view'] = 'view';
 $string['pluginname'] = 'Discussion Metrics';
 $string['selectforum'] = 'Select forum';
 $string['alloncourse'] = 'All on this course';
-$string['replies'] = 'Replies';
+$string['replies'] = 'Total replies';
 $string['firstpost'] = 'First Post';
 $string['lastpost'] = 'Last Post';
 $string['sendreminder'] = 'Send reminder';
@@ -43,6 +43,11 @@ $string['reportstart'] = 'Start';
 $string['reportend'] = 'End';
 $string['reportfilter'] = 'Report filter';
 $string['onlygroupworks'] = 'Specific to this group';
+$string['international'] = 'Total international replies';
+$string['domestic'] = "Total domestic replies";
+$string['self'] = "Totla replies to self";
+$string['stale'] = "Total stale replies";
+$string['stale_days'] = "Days for stale reply";
 
 //Reminder mail
 $string['remindsubject'] = 'Reminder to participate in the international exchange';

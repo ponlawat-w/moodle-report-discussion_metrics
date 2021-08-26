@@ -68,7 +68,24 @@ class report_form extends moodleform {
         
         //Seedを含むか TODO
         //$mform->addElement('checkbox','containseed','Contains seed post');
-        
+        $stale_days = array();
+        for($i=1; $i<=28; $i++){
+            if($i<=14){
+                $stale_days[$i] = $i; 
+            }
+            if($i==21){
+                $stale_days[$i] = $i;
+            }
+            if($i==28){
+                $stale_days[$i] = $i;
+            }
+        }
+        $mform->addElement('select', 'stale_reply_days',get_string('stale_days','report_discussion_metrics'), $stale_days);
+        $mform->hideIf('stale_reply_days','type','eq',3);
+        $mform->hideIf('stale_reply_days','type','eq',4);
+        $mform->hideIf('stale_reply_days','type','eq',5);
+        $mform->hideIf('stale_reply_days','type','eq',6);
+
         $mform->closeHeaderBefore('changefilter');
         $mform->addElement('submit', 'changefilter', get_string('showreport','report_discussion_metrics'));
     }

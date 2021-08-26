@@ -33,32 +33,41 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2020 Takahiro Nakahara <nakahara@3strings.co.jp>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class get_student_data {
+class get_student_data
+{
 
     public $data = array();
-    
-    public function __construct($students,$courseid,$forumid=NULL,$discussions,$discussionarray,$firstposts,$starttime=0,$endtime=0){
+
+    public function __construct($students, $courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $starttime = 0, $endtime = 0, $stale_reply_days)
+    {
         global $DB;
-        
+
         $countries = get_string_manager()->get_list_of_countries();
-        
+
         /*
         foreach($discussions as $discussion){
             $firstposts[] = $discussion->firstpost;
         }
         */
-        
-        foreach($students as $student){
+        $userids = array();
+        $time_created = array();
+        $all_reply = $DB->get_records_sql("SELECT * FROM {forum_posts} WHERE `parent`>0");
+        foreach ($all_reply as $all_replies) {
+            $userids[$all_replies->id] = $all_replies->userid;
+            $time_created[$all_replies->id] = $all_replies->created;
+        }
+        // print_object($time_created);
+        foreach ($students as $student) {
             $studentdata = new studentdata();
 
             //Group
             $studentgroups = groups_get_all_groups($courseid, $student->id);
             $tempgroups = array();
-            $studentdata->group ="";
-            foreach($studentgroups as $studentgroup){
+            $studentdata->group = "";
+            foreach ($studentgroups as $studentgroup) {
                 $tempgroups[] = $studentgroup->name;
             }
-            if($tempgroups) $studentdata->group = implode(',',$tempgroups);
+            if ($tempgroups) $studentdata->group = implode(',', $tempgroups);
             /*
             $ingroups = array_keys($studentgroups);
             if($groupfilter){
@@ -68,11 +77,13 @@ class get_student_data {
                 }
             }
             */
-            
+
             $studentdata->id = $student->id;
 
             //Name
-            $studentdata->fullname = fullname($student);
+//            $studentdata->fullname = fullname($student);
+            $studentdata->firstname = (!isset($student->firstname)?',':$student->firstname);
+            $studentdata->surname = (!isset($student->lastname)?',':$student->lastname);
 
             //Countryfullname($student);
             @$studentdata->country = $countries[$student->country];
@@ -102,41 +113,54 @@ class get_student_data {
             $videonum = 0;
             $audionum = 0;
             $linknum = 0;
-            $levels = array(0,0,0,0);
+            $levels = array(0, 0, 0, 0);
             $studentdata->participants = 0;
             $studentdata->multinationals = 0;
             $replytimearr = array();
             $foravedepth = array();
-            $allpostssql = 'SELECT * FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
-            if($starttime){
-                $allpostssql = $allpostssql.' AND created>'.$starttime;
+            $studentdata->international_reply = 0;
+            $studentdata->domestic_reply = 0;
+            $studentdata->self_reply = 0;
+            $studentdata->stale_reply = 0;
+            $allpostssql = 'SELECT * FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
+            if ($starttime) {
+                $allpostssql = $allpostssql . ' AND created>' . $starttime;
             }
-            if($endtime){
-                $allpostssql = $allpostssql.' AND created<'.$endtime;
+            if ($endtime) {
+                $allpostssql = $allpostssql . ' AND created<' . $endtime;
             }
-            if($allposts = $DB->get_records_sql($allpostssql)){
-                foreach($allposts as $post){
-                    @$posteddiscussions[$post->discussion] ++; //どのディスカッションに何回返信したかを使う時が来るか？
-                    if($post->parent == 0){
-                        $studentdata->posts ++;
-                    }elseif($post->parent > 0){
-                        if(in_array($post->parent,$firstposts)){
+            if ($allposts = $DB->get_records_sql($allpostssql)) {
+                $parentid = array();
+
+                // print_object($allposts);
+                foreach ($allposts as $post) {
+                    @$posteddiscussions[$post->discussion]++; //どのディスカッションに何回返信したかを使う時が来るか？
+                    if ($post->parent == 0) {
+                        $studentdata->posts++;
+                    } elseif ($post->parent > 0) {
+                        if (array_key_exists($post->parent, $time_created)) {
+                            if (strtotime('-' . $stale_reply_days . 'days', $post->created) > ($time_created[$post->parent])) {
+                                $studentdata->stale_reply++;
+                            }
+                        }
+                        $parentid[] = $post->parent;
+                        if (in_array($post->parent, $firstposts)) {
                             $studentdata->repliestoseed++;
                         }
-                        if($parentdata = $DB->get_record('forum_posts',array('id'=>$post->parent))){
+                        if ($parentdata = $DB->get_record('forum_posts', array('id' => $post->parent))) {
                             $sumtime = $sumtime + ($post->created - $parentdata->created); //for average
                             $replytimearr[] = $post->created - $parentdata->created; //for median
                         }
-                        $studentdata->replies ++;
-                        
+                        $studentdata->replies++;
+
                         //Depth
-                        if(!isset($depths[$post->id])){
+                        if (!isset($depths[$post->id])) {
                             $parent = $post->parent;
                             $depths[$post->id] = 1;
-                            while($parent!=0){
-                                if($parentpost = $DB->get_record('forum_posts',array('id'=>$parent))){
-                                    if($parentpost->userid == $student->id){
-                                        if(isset($depths[$parentpost->id])){
+                            while ($parent != 0) {
+                                if ($parentpost = $DB->get_record('forum_posts', array('id' => $parent))) {
+                                    if ($parentpost->userid == $student->id) {
+                                        if (isset($depths[$parentpost->id])) {
                                             unset($depths[$parentpost->id]);
                                         }
                                         $depths[$parentpost->id] = 0;
@@ -144,26 +168,26 @@ class get_student_data {
                                     }
                                     $parent = $parentpost->parent;
                                     $foravedepth[$post->id] = $depths[$post->id];
-                                }else{
+                                } else {
                                     //The parent data has deleted
                                     $depths[$post->id] = 0;
                                     continue;
                                 }
                             }
-                            if($studentdata->maxdepth < $depths[$post->id]){
+                            if ($studentdata->maxdepth < $depths[$post->id]) {
                                 $studentdata->maxdepth = $depths[$post->id];
                             }
-                            if($depths[$post->id]<4){
-                                $levels[$depths[$post->id]-1]++;
-                            }else{
+                            if ($depths[$post->id] < 4) {
+                                $levels[$depths[$post->id] - 1]++;
+                            } else {
                                 $levels[3]++; //Over Level 4
                             }
                         }
                     }
-                    
+
                     $wordnum = count_words($post->message);
                     $studentdata->wordcount += $wordnum;
-                    if($multimediaobj = get_mulutimedia_num($post->message)){
+                    if ($multimediaobj = get_mulutimedia_num($post->message)) {
                         $multimedianum += $multimediaobj->num;
                         $imgnum += $multimediaobj->img;
                         $videonum += $multimediaobj->video;
@@ -171,7 +195,7 @@ class get_student_data {
                         $linknum += $multimediaobj->link;
                     }
                 }
-                if($foravedepth) $studentdata->avedepth = round(array_sum($foravedepth)/count($foravedepth),3);
+                if ($foravedepth) $studentdata->avedepth = round(array_sum($foravedepth) / count($foravedepth), 3);
                 $studentdata->discussion = count($posteddiscussions);
                 $studentdata->multimedia = $multimedianum;
                 /*
@@ -182,52 +206,100 @@ class get_student_data {
                     $studentdata->replytime =  "{$dif_days}days<br>$dif_time";
                 }
                 */
-                //Median replytime
-                if($studentdata->replies ==1){
+
+                //International Domestic and self replies.
+                //Bl Customization.
+                $userid1 = array();
+                foreach ($parentid as $parentids) {
+
+                    if (array_key_exists($parentids, $userids)) {
+                        $userid1[] = $userids[$parentids];
+                    }
+                    if (isset($userids[$parentids])) {
+                        if ($userids[$parentids] == $student->id) {
+                            $studentdata->self_reply++;
+                        }
+                    }
+                }
+                $total = count($userid1);
+                $test = array_count_values($userid1);
+                $test_string = implode(",", array_unique($userid1));
+                if (!$test_string) {
+                    $test_string = "(0)";
+                } else {
+                    $test_string = "(" . $test_string . ")";
+                }
+
+                //To get the countries of those users whom replies get replied by student
+                $replied_user_sql = "SELECT * FROM {user} WHERE `id` IN " . $test_string;
+                $replied_users = $DB->get_records_sql($replied_user_sql);
+                $domestic_user = array();
+                $international_user = array();
+                foreach ($replied_users as $replied_user) {
+                    if ($student->country == $replied_user->country) {
+                        $domestic_user[] = $replied_user->id;
+                    } else {
+                        $international_user[] = $replied_user->id;
+                    }
+                }
+                $international_count = 0;
+                foreach ($international_user as $int_users) {
+                    if (array_key_exists($int_users, $test)) {
+                        $international_count += $test[$int_users];
+                    }
+                }
+
+                $studentdata->international_reply = $international_count;
+                $studentdata->domestic_reply = ($total - $international_count);
+
+                //Bl Customization
+                if ($studentdata->replies == 1) {
                     $studentdata->replytime = discussion_metrics_format_time($replytimearr[0]);
-                }elseif($studentdata->replies ==2){
-                    $studentdata->replytime = discussion_metrics_format_time(($replytimearr[1]+$replytimearr[0])/2);
-                }elseif($studentdata->replies > 2){
+                } elseif ($studentdata->replies == 2) {
+                    $studentdata->replytime = discussion_metrics_format_time(($replytimearr[1] + $replytimearr[0]) / 2);
+                } elseif ($studentdata->replies > 2) {
                     sort($replytimearr);
-                    $middleval = floor(($studentdata->posts)/2);
-                    if($studentdata->replies % 2){
+                    $middleval = floor(($studentdata->posts) / 2);
+                    if ($studentdata->replies % 2) {
                         $studentdata->replytime = discussion_metrics_format_time($replytimearr[$middleval]);
-                    }else{
-                        $studentdata->replytime = discussion_metrics_format_time(($replytimearr[$middleval] + $replytimearr[$middleval+1])/2);
+                    } else {
+                        $studentdata->replytime = discussion_metrics_format_time(($replytimearr[$middleval] + $replytimearr[$middleval + 1]) / 2);
                     }
                 }
                 //if($studentdata->maxdepth) $studentdata->avedepth = $depthsum/$threads;
                 //$studentdata->threads = $threads;
                 //対話した相手の人数と国籍
-                list($discsin,$discsparam) = $DB->get_in_or_equal(array_keys($posteddiscussions));
+                list($discsin, $discsparam) = $DB->get_in_or_equal(array_keys($posteddiscussions));
                 $discswhere = "userid <> ? AND discussion {$discsin}";
-                $dparam = ['studentid'=>$student->id];
+                $dparam = ['studentid' => $student->id];
                 $dparam += $discsparam;
-                if($participants = $DB->get_fieldset_select('forum_posts', 'DISTINCT userid', $discswhere,$dparam)){
+                if ($participants = $DB->get_fieldset_select('forum_posts', 'DISTINCT userid', $discswhere, $dparam)) {
                     $studentdata->participants = count($participants);
-                    list($partin,$partparam) = $DB->get_in_or_equal($participants);
+                    list($partin, $partparam) = $DB->get_in_or_equal($participants);
                     $countrywhere = "id {$partin}";
-                    $countryids = $DB->get_fieldset_select('user', 'DISTINCT country', $countrywhere,$partparam);
+                    $countryids = $DB->get_fieldset_select('user', 'DISTINCT country', $countrywhere, $partparam);
                     $studentdata->multinationals = count($countryids);
                 }
-            }else{
+            } else {
                 $studentdata->discussion = 0;
             }
+
+
             //View
             $logtable = 'logstore_standard_log';
             $eventname = '\\\\mod_forum\\\\event\\\\discussion_viewed';
-            if($forumid){
+            if ($forumid) {
                 $cm = get_coursemodule_from_instance('forum', $forumid, $courseid, false, MUST_EXIST);
-                $viewsql = "SELECT * FROM {logstore_standard_log} WHERE userid=$student->id AND contextinstanceid=$cm->id AND contextlevel=".CONTEXT_MODULE." AND eventname='$eventname'";
-            }else{
-                $views = $DB->get_records($logtable,array('userid'=>$student->id,'courseid'=>$courseid,'eventname'=>$eventname));
+                $viewsql = "SELECT * FROM {logstore_standard_log} WHERE userid=$student->id AND contextinstanceid=$cm->id AND contextlevel=" . CONTEXT_MODULE . " AND eventname='$eventname'";
+            } else {
+                $views = $DB->get_records($logtable, array('userid' => $student->id, 'courseid' => $courseid, 'eventname' => $eventname));
                 $viewsql = "SELECT * FROM {logstore_standard_log} WHERE userid=$student->id AND courseid=$courseid AND eventname='$eventname'";
             }
-            if($starttime){
-                $viewsql = $viewsql.' AND timecreated>'.$starttime;
+            if ($starttime) {
+                $viewsql = $viewsql . ' AND timecreated>' . $starttime;
             }
-            if($endtime){
-                $viewsql = $viewsql.' AND timecreated<'.$endtime;
+            if ($endtime) {
+                $viewsql = $viewsql . ' AND timecreated<' . $endtime;
             }
             $views = $DB->get_records_sql($viewsql);
             $studentdata->views = count($views);
@@ -244,15 +316,15 @@ class get_student_data {
             $studentdata->l4 = $levels[3];
 
             //First post & Last post
-            $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
-            if($allposts){
+            $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
+            if ($allposts) {
 
-                $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
-                if($starttime){
-                    $firstpostsql = $firstpostsql.' AND created>'.$starttime;
+                $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
+                if ($starttime) {
+                    $firstpostsql = $firstpostsql . ' AND created>' . $starttime;
                 }
-                if($endtime){
-                    $firstpostsql = $firstpostsql.' AND created<'.$endtime;
+                if ($endtime) {
+                    $firstpostsql = $firstpostsql . ' AND created<' . $endtime;
                 }
                 $firstpost = $DB->get_record_sql($firstpostsql);
                 $minstr = 'min(created)'; //
@@ -260,18 +332,18 @@ class get_student_data {
                 $studentdata->firstpost = $firstpostdate;
 
 
-                $lastpostsql = 'SELECT MAX(created) FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
-                if($starttime){
-                    $lastpostsql = $lastpostsql.' AND created>'.$starttime;
+                $lastpostsql = 'SELECT MAX(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
+                if ($starttime) {
+                    $lastpostsql = $lastpostsql . ' AND created>' . $starttime;
                 }
-                if($endtime){
-                    $lastpostsql = $lastpostsql.' AND created<'.$endtime;
+                if ($endtime) {
+                    $lastpostsql = $lastpostsql . ' AND created<' . $endtime;
                 }
                 $lastpost = $DB->get_record_sql($lastpostsql);
                 $maxstr = 'max(created)'; //
                 $lastpostdate = userdate($lastpost->$maxstr);
                 $studentdata->lastpost = $lastpostdate;
-            }else{
+            } else {
                 $studentdata->firstpost = '-';
                 $studentdata->lastpost = '-';
             }
@@ -280,7 +352,8 @@ class get_student_data {
     }
 }
 
-class studentdata{
+class studentdata
+{
 
     public $fullname;
     public $posts;
