@@ -70,8 +70,15 @@ class get_group_data
             $groupdata->domestic_reply = 0;
             $groupdata->self_reply = 0;
             $groupdata->stale_reply = 0;
-
+            $levels = array(0, 0, 0, 0);
+            $groupdata->maxdepth = 0;
+            $groupdata->avedepth = 0;
             $sumtime = 0;
+            $groupdata->imgnum = 0;
+            $groupdata->videonum = 0;
+            $groupdata->linknum = 0;
+            $groupdata->audionum = 0;
+
             $countries = array();
             if ($groupusers = groups_get_members($group->id)) {
                 $groupusernum = count($groupusers);
@@ -125,6 +132,37 @@ class get_group_data
                                 }
                                 $groupdata->replies++;
                             }
+                            //BL Customization
+                            if (!isset($depths[$post->id])) {
+                                $parent = $post->parent;
+                                $depths[$post->id] = 1;
+                                while ($parent != 0) {
+                                    if ($parentpost = $DB->get_record('forum_posts', array('id' => $parent))) {
+                                        if ($parentpost->userid == $student->id) {
+                                            if (isset($depths[$parentpost->id])) {
+                                                unset($depths[$parentpost->id]);
+                                            }
+                                            $depths[$parentpost->id] = 0;
+                                            $depths[$post->id]++;
+                                        }
+                                        $parent = $parentpost->parent;
+                                        $foravedepth[$post->id] = $depths[$post->id];
+                                    } else {
+                                        //The parent data has deleted
+                                        $depths[$post->id] = 0;
+                                        continue;
+                                    }
+                                }
+                                if ($groupdata->maxdepth < $depths[$post->id]) {
+                                    $groupdata->maxdepth = $depths[$post->id];
+                                }
+                                if ($depths[$post->id] < 4) {
+                                    $levels[$depths[$post->id] - 1]++;
+                                } else {
+                                    $levels[3]++; //Over Level 4
+                                }
+                            }
+                            //BL Customization
                             /*
                             //Depth
                             if(!isset($depths[$post->id])){
@@ -158,8 +196,15 @@ class get_group_data
                             $groupdata->wordcount += $wordnum;
                             if ($multimediaobj = get_mulutimedia_num($post->message)) {
                                 $multimedianum += $multimediaobj->num;
+                                $groupdata->imgnum += $multimediaobj->img;
+                                $groupdata->videonum += $multimediaobj->video;
+                                $groupdata->audionum += $multimediaobj->audio;
+                                $groupdata->linknum += $multimediaobj->link;
                             }
                         }
+                        //Average depth
+                        if ($foravedepth) $groupdata->avedepth = round(array_sum($foravedepth) / count($foravedepth), 3);
+                        
                         $groupdata->discussion += count($posteddiscussions);
                         $groupdata->multimedia += $multimedianum;
                         //Bl Customization
@@ -229,6 +274,7 @@ class get_group_data
                         $studentdata->discussion = 0;
                         $groupdata->notrepliedusers++;
                     }
+
                     //View
                     $logtable = 'logstore_standard_log';
                     $eventname = '\\\\mod_forum\\\\event\\\\discussion_viewed';
@@ -285,6 +331,7 @@ class get_group_data
                     }
                     $groupdata->users++;
                 }
+
                 $id .= "0)";
                 $sql = "SELECT DISTINCT `userid` FROM {forum_posts} WHERE `userid` IN" . $id . "AND `discussion` IN" . $discussionarray;
                 $active_user = $DB->get_records_sql($sql);
@@ -309,6 +356,10 @@ class get_group_data
                 $groupdata->multinationals = count($countries);
             }
             $this->data[$group->id] = $groupdata;
+            $groupdata->l1 = $levels[0];
+            $groupdata->l2 = $levels[1];
+            $groupdata->l3 = $levels[2];
+            $groupdata->l4 = $levels[3];
         }
     }
 }

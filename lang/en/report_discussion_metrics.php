@@ -45,10 +45,14 @@ $string['reportfilter'] = 'Report filter';
 $string['onlygroupworks'] = 'Specific to this group';
 $string['international'] = 'Total international replies';
 $string['domestic'] = "Total domestic replies";
-$string['self'] = "Totla replies to self";
+$string['self'] = "Total replies to self";
 $string['stale'] = "Total stale replies";
 $string['stale_days'] = "Days for stale reply";
-
+$string['audio'] = "#audio";
+$string['image'] = "#image";
+$string['link'] = "#link";
+$string['video'] = "#video";
+$string['total_reply'] = "Topic Replies";
 //Reminder mail
 $string['remindsubject'] = 'Reminder to participate in the international exchange';
 $string['remindmessage'] = 'We\'ve noticed you haven\'t been participating in the international online exchange. Please log in and reply to others using the forums. Good luck!';
