@@ -38,19 +38,19 @@ class get_group_data
 
     public $data = array();
 
-    public function __construct($courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $allgroups, $starttime = 0, $endtime = 0, $stale_reply_days)
+    public function __construct($courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $allgroups, $starttime = 0, $endtime = 0)
     {
         global $DB;
 
         if (!$allgroups) {
             $allgroups = groups_get_all_groups($courseid);
         }
-        $userids = array();
-        $all_reply = $DB->get_records_sql("SELECT * FROM {forum_posts} WHERE `parent`>0");
-        foreach ($all_reply as $all_replies) {
-            $userids[$all_replies->id] = $all_replies->userid;
-            $time_created[$all_replies->id] = $all_replies->created;
-        }
+//        $userids = array();
+//        $all_reply = $DB->get_records_sql("SELECT * FROM {forum_posts} WHERE `parent`>0");
+//        foreach ($all_reply as $all_replies) {
+//            $userids[$all_replies->id] = $all_replies->userid;
+//            $time_created[$all_replies->id] = $all_replies->created;
+//        }
         foreach ($allgroups as $group) {
             $groupdata = new groupdata;
             $groupdata->name = $group->name;
@@ -66,10 +66,10 @@ class get_group_data
             $groupdata->multimedia = 0;
             $groupdata->notrepliedusers = 0;
             $groupdata->repliedusers = 0;
-            $groupdata->international_reply = 0;
-            $groupdata->domestic_reply = 0;
-            $groupdata->self_reply = 0;
-            $groupdata->stale_reply = 0;
+//            $groupdata->international_reply = 0;
+//            $groupdata->domestic_reply = 0;
+//            $groupdata->self_reply = 0;
+//            $groupdata->stale_reply = 0;
             $levels = array(0, 0, 0, 0);
             $groupdata->maxdepth = 0;
             $groupdata->avedepth = 0;
@@ -84,13 +84,13 @@ class get_group_data
                 $groupusernum = count($groupusers);
                 $gropuserlist = array_keys($groupusers);
                 $international_count = 0;
-                $total = array();
-                $id = "(";
+//                $total = array();
+//                $id = "(";
                 foreach ($groupusers as $guser) {
                     $student = $guser;
                     $studentdata = (object)"";
                     $studentdata->id = $student->id;
-                    $id .= $guser->id . ",";
+//                    $id .= $guser->id . ",";
 
                     //Discussion
                     $posteddiscussions = array();
@@ -118,11 +118,6 @@ class get_group_data
                             if ($post->parent == 0) {
                                 $groupdata->posts++;
                             } elseif ($post->parent > 0) {
-                                if (array_key_exists($post->parent, $time_created)) {
-                                    if (strtotime('-' . $stale_reply_days . 'days', $post->created) > ($time_created[$post->parent])) {
-                                        $groupdata->stale_reply++;
-                                    }
-                                }
                                 $parentid[] = $post->parent;
                                 if (in_array($post->parent, $firstposts)) {
                                     $groupdata->repliestoseed++;
@@ -209,46 +204,6 @@ class get_group_data
                         $groupdata->multimedia += $multimedianum;
                         //Bl Customization
                         //Internation Domestic and self replies.
-
-                        $userid1 = array();
-                        foreach ($parentid as $parentids) {
-                            if (array_key_exists($parentids, $userids)) {
-                                $userid1[] = $userids[$parentids];
-                            }
-                            if (isset($userids[$parentids])) {
-                                if ($userids[$parentids] == $student->id) {
-                                    $groupdata->self_reply++;
-                                }
-                            }
-                        }
-                        $total[] = count($userid1);
-                        $test = array_count_values($userid1);
-                        $test_string = implode(",", array_unique($userid1));
-                        if (!$test_string) {
-                            $test_string = "(0)";
-                        } else {
-                            $test_string = "(" . $test_string . ")";
-                        }
-
-                        //To get the countries of those users whom replies get replied by student
-                        $replied_user_sql = "SELECT * FROM {user} WHERE `id` IN " . $test_string;
-                        $replied_user = $DB->get_records_sql($replied_user_sql);
-                        $domestic_user = array();
-                        $international_user = array();
-                        foreach ($replied_user as $replied_users) {
-                            if ($student->country == $replied_users->country) {
-                                $domestic_user[] = $replied_users->id;
-                            } else {
-                                $international_user[] = $replied_users->id;
-                            }
-                        }
-                        foreach ($international_user as $int_users) {
-                            if (array_key_exists($int_users, $test)) {
-                                $international_count += $test[$int_users];
-                            }
-                        }
-
-                        $groupdata->international_reply = $international_count;
                         //Bl Customization
 
                         /*
@@ -332,14 +287,11 @@ class get_group_data
                     $groupdata->users++;
                 }
 
-                $id .= "0)";
-                $sql = "SELECT DISTINCT `userid` FROM {forum_posts} WHERE `userid` IN" . $id . "AND `discussion` IN" . $discussionarray;
-                $active_user = $DB->get_records_sql($sql);
-                $groupdata->active_users = count($active_user);
-                $groupdata->inactive_users = $groupusernum - $groupdata->active_users;
+//                $id .= "0)";
+                
                 // Bl Customization
-                $total_replies = array_sum($total);
-                $groupdata->domestic_reply = ($total_replies - $international_count);
+//                $total_replies = array_sum($total);
+//                $groupdata->domestic_reply = ($total_replies - $international_count);
                 // Bl Customization
 
                 if ($sumtime) {

@@ -80,11 +80,15 @@ class report_form extends moodleform {
                 $stale_days[$i] = $i;
             }
         }
+        $stale_days = array('1'=>1, '2'=>2, '3'=>3, '4'=>4, '5'=>5, '6'=>6, '7'=>7);
         $mform->addElement('select', 'stale_reply_days',get_string('stale_days','report_discussion_metrics'), $stale_days);
-        $mform->hideIf('stale_reply_days','type','eq',3);
-        $mform->hideIf('stale_reply_days','type','eq',4);
-        $mform->hideIf('stale_reply_days','type','eq',5);
-        $mform->hideIf('stale_reply_days','type','eq',6);
+        $mform->setType('stale_reply_days', PARAM_INT);
+        $mform->setDefault('stale_reply_days', 7);
+//        $mform->hideIf('stale_reply_days','type','neq',1);
+//        $mform->hideIf('stale_reply_days','type','eq',4);
+//        $mform->hideIf('stale_reply_days','type','eq',5);
+//        $mform->hideIf('stale_reply_days','type','eq',6);
+//        $mform->hideIf('stale_reply_days','type','eq',2);
 
         $mform->closeHeaderBefore('changefilter');
         $mform->addElement('submit', 'changefilter', get_string('showreport','report_discussion_metrics'));

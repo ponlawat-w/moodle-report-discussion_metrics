@@ -256,10 +256,10 @@ if ($type || $tsort || $treset || $page) {
         }
     } elseif ($type == 2) { //Goupごと
 
-        $groupdata = new report_discussion_metrics\select\get_group_data($courseid, $forumid, $discussions, $discussionarray, $firstposts, $groups, $starttime, $endtime, $stale_reply_days);
+        $groupdata = new report_discussion_metrics\select\get_group_data($courseid, $forumid, $discussions, $discussionarray, $firstposts, $groups, $starttime, $endtime);
         $data = $groupdata->data;
-        $table->define_columns(array('name', 'repliedusers', 'notrepliedusers', 'discussion','users', 'posts', 'replies', 'international_reply', 'domestic_reply', 'multinationals', 'stale_reply', 'self_reply', 'r2ndpost', 'l1', 'l2', 'l3', 'l4', 'maxe', 'avge', 'wordcount', 'views', 'image', 'video', 'audio', 'link'));
-        $table->define_headers(array($strgroup, '# of active members', '# of inactive members', 'Total discussion joined', 'Total discussion participants', $strposts, 'Total Replies', $strinternational, $strdomestic, 'Total nationalities', $strstale, $strself, 'R2NDPost', '#E1', '#E2', '#E3', '#E4', 'Max E', 'Average E', $strwordcount, $strviews, $strimage, $strvideo, $straudio, $strlink));
+        $table->define_columns(array('name', 'repliedusers', 'notrepliedusers', 'discussion','users', 'posts', 'replies', 'multinationals', 'r2ndpost', 'l1', 'l2', 'l3', 'l4', 'maxe', 'avge', 'wordcount', 'views', 'image', 'video', 'audio', 'link'));
+        $table->define_headers(array($strgroup, '# of active members', '# of inactive members', 'Total discussion joined', 'Total discussion participants', $strposts, 'Total Replies', 'Total nationalities', 'R2NDPost', '#E1', '#E2', '#E3', '#E4', 'Max E', 'Average E', $strwordcount, $strviews, $strimage, $strvideo, $straudio, $strlink));
         $table->setup();
         $sortby = $table->get_sort_columns();
         if ($sortby && !$orderbyname) {
@@ -270,7 +270,7 @@ if ($type || $tsort || $treset || $page) {
             $data = array_slice($data, $page * $pagesize, $pagesize);
         }
         foreach ($data as $row) {
-            $trdata = array($row->name, $row->repliedusers, $row->notrepliedusers, $row->discussion, $row->users,$row->posts, $row->replies, $row->international_reply, $row->domestic_reply, $row->multinationals, $row->stale_reply, $row->self_reply, $row->repliestoseed, $row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->imgnum, $row->videonum, $row->audionum, $row->linknum);
+            $trdata = array($row->name, $row->repliedusers, $row->notrepliedusers, $row->discussion, $row->users,$row->posts, $row->replies, $row->multinationals, $row->repliestoseed, $row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->imgnum, $row->videonum, $row->audionum, $row->linknum);
             $table->add_data($trdata);
         }
     } elseif ($type == 3) { //Dialogue(discussion)の集計
