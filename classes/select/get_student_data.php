@@ -49,14 +49,13 @@ class get_student_data
             $firstposts[] = $discussion->firstpost;
         }
         */
-        $userids = array();
         $time_created = array();
         $all_reply = $DB->get_records_sql("SELECT * FROM {forum_posts} WHERE `parent`>0");
+        $userids = array();
         foreach ($all_reply as $all_replies) {
             $userids[$all_replies->id] = $all_replies->userid;
             $time_created[$all_replies->id] = $all_replies->created;
         }
-        // print_object($time_created);
         foreach ($students as $student) {
             $studentdata = new studentdata();
 
@@ -81,9 +80,9 @@ class get_student_data
             $studentdata->id = $student->id;
 
             //Name
-//            $studentdata->fullname = fullname($student);
-            $studentdata->firstname = (!isset($student->firstname)?',':$student->firstname);
-            $studentdata->surname = (!isset($student->lastname)?',':$student->lastname);
+            //            $studentdata->fullname = fullname($student);
+            $studentdata->firstname = (!isset($student->firstname) ? ',' : $student->firstname);
+            $studentdata->surname = (!isset($student->lastname) ? ',' : $student->lastname);
 
             //Countryfullname($student);
             @$studentdata->country = $countries[$student->country];
@@ -118,8 +117,6 @@ class get_student_data
             $studentdata->multinationals = 0;
             $replytimearr = array();
             $foravedepth = array();
-            $studentdata->international_reply = 0;
-            $studentdata->domestic_reply = 0;
             $studentdata->self_reply = 0;
             $studentdata->stale_reply = 0;
             $allpostssql = 'SELECT * FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
@@ -130,9 +127,6 @@ class get_student_data
                 $allpostssql = $allpostssql . ' AND created<' . $endtime;
             }
             if ($allposts = $DB->get_records_sql($allpostssql)) {
-                $parentid = array();
-
-                // print_object($allposts);
                 foreach ($allposts as $post) {
                     @$posteddiscussions[$post->discussion]++; //どのディスカッションに何回返信したかを使う時が来るか？
                     if ($post->parent == 0) {
@@ -143,7 +137,11 @@ class get_student_data
                                 $studentdata->stale_reply++;
                             }
                         }
-                        $parentid[] = $post->parent;
+                        if (isset($userids[$post->parent])) {
+                            if ($userids[$post->parent] == $student->id) {
+                                $studentdata->self_reply++;
+                            }
+                        }
                         if (in_array($post->parent, $firstposts)) {
                             $studentdata->repliestoseed++;
                         }
@@ -206,53 +204,6 @@ class get_student_data
                     $studentdata->replytime =  "{$dif_days}days<br>$dif_time";
                 }
                 */
-
-                //International Domestic and self replies.
-                //Bl Customization.
-                $userid1 = array();
-                foreach ($parentid as $parentids) {
-
-                    if (array_key_exists($parentids, $userids)) {
-                        $userid1[] = $userids[$parentids];
-                    }
-                    if (isset($userids[$parentids])) {
-                        if ($userids[$parentids] == $student->id) {
-                            $studentdata->self_reply++;
-                        }
-                    }
-                }
-                $total = count($userid1);
-                $test = array_count_values($userid1);
-                $test_string = implode(",", array_unique($userid1));
-                if (!$test_string) {
-                    $test_string = "(0)";
-                } else {
-                    $test_string = "(" . $test_string . ")";
-                }
-
-                //To get the countries of those users whom replies get replied by student
-                $replied_user_sql = "SELECT * FROM {user} WHERE `id` IN " . $test_string;
-                $replied_users = $DB->get_records_sql($replied_user_sql);
-                $domestic_user = array();
-                $international_user = array();
-                foreach ($replied_users as $replied_user) {
-                    if ($student->country == $replied_user->country) {
-                        $domestic_user[] = $replied_user->id;
-                    } else {
-                        $international_user[] = $replied_user->id;
-                    }
-                }
-                $international_count = 0;
-                foreach ($international_user as $int_users) {
-                    if (array_key_exists($int_users, $test)) {
-                        $international_count += $test[$int_users];
-                    }
-                }
-
-                $studentdata->international_reply = $international_count;
-                $studentdata->domestic_reply = ($total - $international_count);
-
-                //Bl Customization
                 if ($studentdata->replies == 1) {
                     $studentdata->replytime = discussion_metrics_format_time($replytimearr[0]);
                 } elseif ($studentdata->replies == 2) {

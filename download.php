@@ -12,7 +12,7 @@ $grouoingid = optional_param('grouping', 0, PARAM_INT);
 $start = optional_param('start', '', PARAM_RAW);
 $end = optional_param('end', '', PARAM_RAW);
 $onlygroupworks = optional_param('onlygroupworks', 0, PARAM_INT);
-$stale_reply_days = optional_param('stale_reply_days',0,PARAM_INT);
+$stale_reply_days = optional_param('stale_reply_days', 0, PARAM_INT);
 
 $course = $DB->get_record('course', array('id' => $courseid));
 require_course_login($course);
@@ -46,10 +46,10 @@ $strinternational = get_string('international', 'report_discussion_metrics');
 $strdomestic = get_string('domestic', 'report_discussion_metrics');
 $strself = get_string('self', 'report_discussion_metrics');
 $strstale = get_string('stale', 'report_discussion_metrics');
-$straudio = get_string('audio','report_discussion_metrics');
-$strlink = get_string('link','report_discussion_metrics');
-$strvideo = get_string('video','report_discussion_metrics');
-$strimage = get_string('image','report_discussion_metrics');
+$straudio = get_string('audio', 'report_discussion_metrics');
+$strlink = get_string('link', 'report_discussion_metrics');
+$strvideo = get_string('video', 'report_discussion_metrics');
+$strimage = get_string('image', 'report_discussion_metrics');
 
 $groups = array();
 if ($groupid) {
@@ -131,22 +131,22 @@ $csvexport->set_filename($filename);
 if ($type == 1) {
     $studentdata = new report_discussion_metrics\select\get_student_data($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime, $stale_reply_days);
     $data = $studentdata->data;
-//    $csvexport->add_data(array($strname, $strgroup, $strcounrty, $strinstituion, 'Discussion', $strposts, $strreplies, $strinternational, $strdomestic, $strself, $strstale, 'Replies to seed', 'Reply Time(s)', '#L1', '#L2', '#L3', '#L4', 'Max depth', 'Average depth', $strwordcount, $strviews, $strmultimedia, '#image', '#video', '#audio', '#link', 'Participants', 'Multinational'));
-    $csvexport->add_data(array('Firstname', 'Surname',  $strcounrty, $strinstituion, $strgroup, 'Total discussion joined',  'Total discussion participants', 'Total Nationalities', $strposts, $strreplies, $strinternational, $strdomestic, $strstale, $strself, 'R2NDPost', 'Reply Time(s)', 'E#1', 'E#2', 'E#3', 'E#4+', 'Max E', 'Average E', $strwordcount, $strviews, '#image', '#video', '#audio', '#link'));
+    //    $csvexport->add_data(array($strname, $strgroup, $strcounrty, $strinstituion, 'Discussion', $strposts, $strreplies, $strinternational, $strdomestic, $strself, $strstale, 'Replies to seed', 'Reply Time(s)', '#L1', '#L2', '#L3', '#L4', 'Max depth', 'Average depth', $strwordcount, $strviews, $strmultimedia, '#image', '#video', '#audio', '#link', 'Participants', 'Multinational'));
+    $csvexport->add_data(array('Firstname', 'Surname',  $strcounrty, $strinstituion, $strgroup, 'Total discussion joined',  'Total discussion participants', 'Total Nationalities', $strposts, $strreplies, $strstale, $strself, 'R2NDPost', 'Reply Time(s)', 'E#1', 'E#2', 'E#3', 'E#4+', 'Max E', 'Average E', $strwordcount, $strviews, '#image', '#video', '#audio', '#link'));
     foreach ($data as $row) {
-//        $line = array($row->fullname, $row->group, $row->country, $row->institution, $row->discussion, $row->posts, $row->replies, $row->international_reply, $row->domestic_reply, $row->self_reply, $row->stale_reply,$row->repliestoseed, $row->replytime, $row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->multimedia, $row->imagenum, $row->videonum, $row->audionum, $row->linknum, $row->participants, $row->multinationals);
-        $line = array($row->firstname, $row->surname, $row->country, $row->institution, $row->group, $row->discussion, $row->participants, $row->multinationals, $row->posts, $row->replies, $row->international_reply, $row->domestic_reply, $row->stale_reply, $row->self_reply, $row->repliestoseed, $row->replytime, $row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->imagenum, $row->videonum, $row->audionum, $row->linknum);
+        //        $line = array($row->fullname, $row->group, $row->country, $row->institution, $row->discussion, $row->posts, $row->replies, $row->international_reply, $row->domestic_reply, $row->self_reply, $row->stale_reply,$row->repliestoseed, $row->replytime, $row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->multimedia, $row->imagenum, $row->videonum, $row->audionum, $row->linknum, $row->participants, $row->multinationals);
+        $line = array($row->firstname, $row->surname, $row->country, $row->institution, $row->group, $row->discussion, $row->participants, $row->multinationals, $row->posts, $row->replies, $row->stale_reply, $row->self_reply, $row->repliestoseed, $row->replytime, $row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->imagenum, $row->videonum, $row->audionum, $row->linknum);
         $csvexport->add_data($line);
     }
 } elseif ($type == 2) { //Goupごと
-    $groupdata = new report_discussion_metrics\select\get_group_data($courseid, $forumid, $discussions, $discussionarray, $firstposts, $groups, $starttime, $endtime);
+    $groupdata = new report_discussion_metrics\select\get_group_data($courseid, $forumid, $discussions, $discussionarray, $firstposts, $groups, $starttime, $endtime, $stale_reply_days);
     $data = $groupdata->data;
 
-//    $csvexport->add_data(array('name', 'users', 'multinationals', 'repliestoseed', 'replies', $strinternational, $strdomestic, $strself, $strstale,'#E1','#E2','#E3','#E4','Max E','Average E', 'repliedusers', 'notrepliedusers', 'wordcount', 'views', 'multimedia',$strimage,$straudio,$strlink,$strvideo));
-    $csvexport->add_data(array($strgroup, '# of active members', '# of inactive members', 'Total discussion joined', 'Total discussion participants', $strposts, 'Total Replies','Total nationalities','R2NDPost', '#E1', '#E2', '#E3', '#E4', 'Max E', 'Average E', $strwordcount, $strviews, $strimage, $strvideo, $straudio, $strlink));
+    //    $csvexport->add_data(array('name', 'users', 'multinationals', 'repliestoseed', 'replies', $strinternational, $strdomestic, $strself, $strstale,'#E1','#E2','#E3','#E4','Max E','Average E', 'repliedusers', 'notrepliedusers', 'wordcount', 'views', 'multimedia',$strimage,$straudio,$strlink,$strvideo));
+    $csvexport->add_data(array($strgroup, '# of active members', '# of inactive members', 'Total discussion joined', 'Total discussion participants', $strposts, 'Total Replies', 'Total nationalities', $strstale, $strself, 'R2NDPost', '#E1', '#E2', '#E3', '#E4', 'Max E', 'Average E', $strwordcount, $strviews, $strimage, $strvideo, $straudio, $strlink));
     foreach ($data as $row) {
-//        $line = array($row->name, $row->users, $row->multinationals, $row->repliestoseed, $row->replies, $row->international_reply, $row->domestic_reply, $row->self_reply, $row->stale_reply,$row->l1,$row->l2,$row->l3,$row->l4, $row->maxdepth,$row->avedepth,$row->repliedusers, $row->notrepliedusers, $row->wordcount, $row->views, $row->multimedia,$row->imgnum,$row->audionum,$row->linknum,$row->videonum);
-        $line =  array($row->name, $row->repliedusers, $row->notrepliedusers, $row->discussion, $row->users,$row->posts, $row->replies, $row->multinationals, $row->repliestoseed, $row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->imgnum, $row->videonum, $row->audionum, $row->linknum);
+        //        $line = array($row->name, $row->users, $row->multinationals, $row->repliestoseed, $row->replies, $row->international_reply, $row->domestic_reply, $row->self_reply, $row->stale_reply,$row->l1,$row->l2,$row->l3,$row->l4, $row->maxdepth,$row->avedepth,$row->repliedusers, $row->notrepliedusers, $row->wordcount, $row->views, $row->multimedia,$row->imgnum,$row->audionum,$row->linknum,$row->videonum);
+        $line =  array($row->name, $row->repliedusers, $row->notrepliedusers, $row->discussion, $row->users, $row->posts, $row->replies, $row->multinationals, $row->stale_reply, $row->self_reply, $row->repliestoseed, $row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->imgnum, $row->videonum, $row->audionum, $row->linknum);
         $csvexport->add_data($line);
     }
 } elseif ($type == 3) { //Dialogue(discussion)の集計

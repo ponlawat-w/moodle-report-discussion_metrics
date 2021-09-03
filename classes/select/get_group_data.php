@@ -38,19 +38,19 @@ class get_group_data
 
     public $data = array();
 
-    public function __construct($courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $allgroups, $starttime = 0, $endtime = 0)
+    public function __construct($courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $allgroups, $starttime = 0, $endtime = 0, $stale_reply_days)
     {
         global $DB;
 
         if (!$allgroups) {
             $allgroups = groups_get_all_groups($courseid);
         }
-//        $userids = array();
-//        $all_reply = $DB->get_records_sql("SELECT * FROM {forum_posts} WHERE `parent`>0");
-//        foreach ($all_reply as $all_replies) {
-//            $userids[$all_replies->id] = $all_replies->userid;
-//            $time_created[$all_replies->id] = $all_replies->created;
-//        }
+        $userids = array();
+        $all_reply = $DB->get_records_sql("SELECT * FROM {forum_posts} WHERE `parent`>0");
+        foreach ($all_reply as $all_replies) {
+            $userids[$all_replies->id] = $all_replies->userid;
+            $time_created[$all_replies->id] = $all_replies->created;
+        }
         foreach ($allgroups as $group) {
             $groupdata = new groupdata;
             $groupdata->name = $group->name;
@@ -66,10 +66,8 @@ class get_group_data
             $groupdata->multimedia = 0;
             $groupdata->notrepliedusers = 0;
             $groupdata->repliedusers = 0;
-//            $groupdata->international_reply = 0;
-//            $groupdata->domestic_reply = 0;
-//            $groupdata->self_reply = 0;
-//            $groupdata->stale_reply = 0;
+            $groupdata->self_reply = 0;
+            $groupdata->stale_reply = 0;
             $levels = array(0, 0, 0, 0);
             $groupdata->maxdepth = 0;
             $groupdata->avedepth = 0;
@@ -83,14 +81,13 @@ class get_group_data
             if ($groupusers = groups_get_members($group->id)) {
                 $groupusernum = count($groupusers);
                 $gropuserlist = array_keys($groupusers);
-                $international_count = 0;
-//                $total = array();
-//                $id = "(";
+                //                $total = array();
+                //                $id = "(";
                 foreach ($groupusers as $guser) {
                     $student = $guser;
                     $studentdata = (object)"";
                     $studentdata->id = $student->id;
-//                    $id .= $guser->id . ",";
+                    //                    $id .= $guser->id . ",";
 
                     //Discussion
                     $posteddiscussions = array();
@@ -112,13 +109,21 @@ class get_group_data
                         $allpostssql = $allpostssql . ' AND created<' . $endtime;
                     }
                     if ($allposts = $DB->get_records_sql($allpostssql)) {
-                        $parentid = array();
                         foreach ($allposts as $post) {
                             @$posteddiscussions[$post->discussion]++; //どのディスカッションに何回投稿したかを使う時が来るか？
                             if ($post->parent == 0) {
                                 $groupdata->posts++;
                             } elseif ($post->parent > 0) {
-                                $parentid[] = $post->parent;
+                                if (array_key_exists($post->parent, $time_created)) {
+                                    if (strtotime('-' . $stale_reply_days . 'days', $post->created) > ($time_created[$post->parent])) {
+                                        $groupdata->stale_reply++;
+                                    }
+                                }
+                                if (isset($userids[$post->parent])) {
+                                    if ($userids[$post->parent] == $student->id) {
+                                        $groupdata->self_reply++;
+                                    }
+                                }
                                 if (in_array($post->parent, $firstposts)) {
                                     $groupdata->repliestoseed++;
                                 }
@@ -126,38 +131,40 @@ class get_group_data
                                     $sumtime = $sumtime + ($post->created - $parent->created);
                                 }
                                 $groupdata->replies++;
-                            }
-                            //BL Customization
-                            if (!isset($depths[$post->id])) {
-                                $parent = $post->parent;
-                                $depths[$post->id] = 1;
-                                while ($parent != 0) {
-                                    if ($parentpost = $DB->get_record('forum_posts', array('id' => $parent))) {
-                                        if ($parentpost->userid == $student->id) {
-                                            if (isset($depths[$parentpost->id])) {
-                                                unset($depths[$parentpost->id]);
+                                //BL Customization
+                                //Depth
+                                if (!isset($depths[$post->id])) {
+                                    $parent = $post->parent;
+                                    $depths[$post->id] = 1;
+                                    while ($parent != 0) {
+                                        if ($parentpost = $DB->get_record('forum_posts', array('id' => $parent))) {
+                                            if ($parentpost->userid == $student->id) {
+                                                if (isset($depths[$parentpost->id])) {
+                                                    unset($depths[$parentpost->id]);
+                                                }
+                                                $depths[$parentpost->id] = 0;
+                                                $depths[$post->id]++;
                                             }
-                                            $depths[$parentpost->id] = 0;
-                                            $depths[$post->id]++;
+                                            $parent = $parentpost->parent;
+                                            $foravedepth[$post->id] = $depths[$post->id];
+                                        } else {
+                                            //The parent data has deleted
+                                            $depths[$post->id] = 0;
+                                            continue;
                                         }
-                                        $parent = $parentpost->parent;
-                                        $foravedepth[$post->id] = $depths[$post->id];
+                                    }
+                                    if ($groupdata->maxdepth < $depths[$post->id]) {
+                                        $groupdata->maxdepth = $depths[$post->id];
+                                    }
+                                    if ($depths[$post->id] < 4) {
+                                        $levels[$depths[$post->id] - 1]++;
                                     } else {
-                                        //The parent data has deleted
-                                        $depths[$post->id] = 0;
-                                        continue;
+                                        $levels[3]++; //Over Level 4
                                     }
                                 }
-                                if ($groupdata->maxdepth < $depths[$post->id]) {
-                                    $groupdata->maxdepth = $depths[$post->id];
-                                }
-                                if ($depths[$post->id] < 4) {
-                                    $levels[$depths[$post->id] - 1]++;
-                                } else {
-                                    $levels[3]++; //Over Level 4
-                                }
                             }
                             //BL Customization
+
                             /*
                             //Depth
                             if(!isset($depths[$post->id])){
@@ -199,11 +206,18 @@ class get_group_data
                         }
                         //Average depth
                         if ($foravedepth) $groupdata->avedepth = round(array_sum($foravedepth) / count($foravedepth), 3);
-                        
+
                         $groupdata->discussion += count($posteddiscussions);
                         $groupdata->multimedia += $multimedianum;
                         //Bl Customization
-                        //Internation Domestic and self replies.
+                        //self replies.
+                        // foreach ($parentid as $parentids) {
+                        //     if (isset($userids[$parentids])) {
+                        //         if ($userids[$parentids] == $student->id) {
+                        //             $groupdata->self_reply++;
+                        //         }
+                        //     }
+                        // }
                         //Bl Customization
 
                         /*
@@ -287,11 +301,11 @@ class get_group_data
                     $groupdata->users++;
                 }
 
-//                $id .= "0)";
-                
+                //                $id .= "0)";
+
                 // Bl Customization
-//                $total_replies = array_sum($total);
-//                $groupdata->domestic_reply = ($total_replies - $international_count);
+                //                $total_replies = array_sum($total);
+                //                $groupdata->domestic_reply = ($total_replies - $international_count);
                 // Bl Customization
 
                 if ($sumtime) {
