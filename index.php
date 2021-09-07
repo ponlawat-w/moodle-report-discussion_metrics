@@ -143,8 +143,10 @@ $PAGE->set_pagelayout('incourse');
 $PAGE->set_url($CFG->wwwroot . '/report/discussion_metrics/index.php', $params);
 $PAGE->navbar->add('discussion_metrics');
 $PAGE->set_heading($course->fullname);
+$PAGE->requires->js_call_amd('report_discussion_metrics/script', 'init');
 echo $OUTPUT->header();
 $mform->display();
+echo html_writer::tag('input','',array('type'=>'hidden','id'=>'courseid1','value'=>$courseid));
 
 $strname = get_string('fullname');
 $strfirstname = get_string('firstname');
@@ -171,13 +173,14 @@ $straudio = get_string('audio', 'report_discussion_metrics');
 $strlink = get_string('link', 'report_discussion_metrics');
 $strvideo = get_string('video', 'report_discussion_metrics');
 $strimage = get_string('image', 'report_discussion_metrics');
+$strdirect = get_string('direct_reply', 'report_discussion_metrics');
 
 if ($type || $tsort || $treset || $page) {
     echo html_writer::empty_tag('br');
-    echo '<a href="download.php' . $paramstr . '"><button class="btn btn-primary ">' . get_string('download') . '</button></a><br><br>';
-    $downloadbutton = '<button class="btn btn-primary ">' . get_string('download') . '</button>';
-    echo html_writer::empty_tag('br');
-    echo html_writer::empty_tag('br');
+    // echo '<a href="download.php"><button class="btn btn-primary download">' . get_string('download') . '</button></a><br><br>';
+    // $downloadbutton = '<button class="btn btn-primary ">' . get_string('download') . '</button>';
+    // echo html_writer::empty_tag('br');
+    // echo html_writer::empty_tag('br');
     echo html_writer::start_tag('div', array('id' => 'discssionmetrixreport'));
     if ($forumid) { //Add onlugroupaction @20210405
         $students = get_users_by_capability($modcontext, 'mod/forum:viewdiscussion', '', $orderbyname);
@@ -228,8 +231,8 @@ if ($type || $tsort || $treset || $page) {
     if ($type == 1) {
         $studentdata = new report_discussion_metrics\select\get_student_data($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime, $stale_reply_days);
         $data = $studentdata->data;
-        $table->define_columns(array('firstname', 'surname', 'country', 'institution', 'group', 'discussion', 'participants', 'multinational', 'posts', 'replies', 'stale_reply', 'self_reply', 'repliestoseed', 'Reply time', 'l1', 'l2', 'l3', 'l4', 'maxdepth', 'avedepth', 'wordcount', 'views', 'imagenum', 'videonum', 'audionum', 'linknum'));
-        $table->define_headers(array('Firstname', 'Surname',  $strcounrty, $strinstituion, $strgroup, 'Total discussion joined',  'Total discussion participants', 'Total Nationalities', $strposts, $strreplies, $strstale, $strself, 'Direct replies to a new discussion post', 'Reply Time(s)', 'E#1', 'E#2', 'E#3', 'E#4+', 'Max E', 'Average E', $strwordcount, $strviews, '#image', '#video', '#audio', '#link'));
+        $table->define_columns(array('firstname', 'surname', 'country', 'institution', 'group', 'discussion', 'participants', 'multinational', 'posts', 'replies', 'stale_reply', 'self_reply', 'repliestoseed', 'l1', 'l2', 'l3', 'l4', 'maxdepth', 'avedepth', 'wordcount', 'views', 'imagenum', 'videonum', 'audionum', 'linknum'));
+        $table->define_headers(array('Firstname', 'Surname',  $strcounrty, $strinstituion, $strgroup, 'Total discussion joined',  'Total discussion participants', 'Total Nationalities', $strposts, $strreplies, $strstale, $strself, $strdirect, 'E#1', 'E#2', 'E#3', 'E#4+', 'Max E', 'Average E', $strwordcount, $strviews, '#image', '#video', '#audio', '#link'));
         $table->setup();
         $sortby = $table->get_sort_columns();
         if ($sortby) {
@@ -251,7 +254,7 @@ if ($type || $tsort || $treset || $page) {
             $data = array_slice($data, $page * $pagesize, $pagesize);
         }
         foreach ($data as $row) {
-            $trdata = array($row->firstname, $row->surname, $row->country, $row->institution, $row->group, $row->discussion, $row->participants, $row->multinationals, $row->posts, $row->replies, $row->stale_reply, $row->self_reply, $row->repliestoseed, $row->replytime, $row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->imagenum, $row->videonum, $row->audionum, $row->linknum);
+            $trdata = array($row->firstname, $row->surname, $row->country, $row->institution, $row->group, $row->discussion, $row->participants, $row->multinationals, $row->posts, $row->replies, $row->stale_reply, $row->self_reply, $row->repliestoseed,$row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->imagenum, $row->videonum, $row->audionum, $row->linknum);
             $table->add_data($trdata);
         }
     } elseif ($type == 2) { //Goupごと
@@ -259,7 +262,7 @@ if ($type || $tsort || $treset || $page) {
         $groupdata = new report_discussion_metrics\select\get_group_data($courseid, $forumid, $discussions, $discussionarray, $firstposts, $groups, $starttime, $endtime, $stale_reply_days);
         $data = $groupdata->data;
         $table->define_columns(array('name', 'repliedusers', 'notrepliedusers', 'discussion', 'users', 'posts', 'replies', 'multinationals', 'stale_reply', 'self_reply', 'r2ndpost', 'l1', 'l2', 'l3', 'l4', 'maxe', 'avge', 'wordcount', 'views', 'image', 'video', 'audio', 'link'));
-        $table->define_headers(array($strgroup, '# of active members', '# of inactive members', 'Total discussion joined', 'Total discussion participants', $strposts, 'Total Replies', 'Total nationalities', $strstale, $strself, 'Direct replies to a new discussion post', '#E1', '#E2', '#E3', '#E4', 'Max E', 'Average E', $strwordcount, $strviews, $strimage, $strvideo, $straudio, $strlink));
+        $table->define_headers(array($strgroup, '# of active members', '# of inactive members', 'Total discussion joined', 'Total discussion participants', $strposts, 'Total Replies', 'Total nationalities', $strstale, $strself, $strdirect, '#E1', '#E2', '#E3', '#E4', 'Max E', 'Average E', $strwordcount, $strviews, $strimage, $strvideo, $straudio, $strlink));
         $table->setup();
         $sortby = $table->get_sort_columns();
         if ($sortby && !$orderbyname) {
@@ -297,7 +300,7 @@ if ($type || $tsort || $treset || $page) {
         $dialoguedata = new report_discussion_metrics\select\get_dialogue_data($courseid, $discussions, $groups, $starttime, $endtime);
         $data = $dialoguedata->data;
         $table->define_columns(array('groupname', 'forumname', 'name', 'posts', 'bereplied', 'threads', 'l1', 'l2', 'l3', 'l4', 'multimedia', 'replytime', 'density'));
-        $table->define_headers(array('Group', "Forum", 'Discussion', '#post', '#been replied to', 'R2NDPost', '#L1', '#L2', '#L3', '#L4', '#multimedia', 'Reply time', 'Density'));
+        $table->define_headers(array('Group', "Forum", 'Discussion', '#post', '#been replied to', $strdirect, '#L1', '#L2', '#L3', '#L4', '#multimedia', 'Reply time', 'Density'));
         $table->setup();
         $sortby = $table->get_sort_columns();
         if ($sortby && !$orderbyname) {
@@ -318,7 +321,7 @@ if ($type || $tsort || $treset || $page) {
         $countrydata = new report_discussion_metrics\select\get_country_data($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime);
         $data = $countrydata->data;
         $table->define_columns(array('country', 'users', 'repliestoseed', 'replies', 'repliedusers', 'notrepliedusers', 'wordcount', 'views', 'multimedia'));
-        $table->define_headers(array($strcounrty, '#member', 'R2NDPost', '#replies', '#replied user', '#not replied user', $strwordcount, $strviews, $strmultimedia));
+        $table->define_headers(array($strcounrty, '#member', $strdirect, '#replies', '#replied user', '#not replied user', $strwordcount, $strviews, $strmultimedia));
         $table->setup();
         $sortby = $table->get_sort_columns();
         if ($sortby && !$orderbyname) {
@@ -336,7 +339,7 @@ if ($type || $tsort || $treset || $page) {
         $groupcountrydata = new report_discussion_metrics\select\get_group_country_data($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $groups, $starttime, $endtime);
         $data = $groupcountrydata->data;
         $table->define_columns(array('groupname', 'country', 'users', 'repliestoseed', 'replies', 'repliedusers', 'notrepliedusers', 'wordcount', 'views', 'multimedia'));
-        $table->define_headers(array($strgroup, $strcounrty, '#member', 'R2NDPost', '#replies', '#replied user', '#not replied user', $strwordcount, $strviews, $strmultimedia));
+        $table->define_headers(array($strgroup, $strcounrty, '#member', $strdirect, '#replies', '#replied user', '#not replied user', $strwordcount, $strviews, $strmultimedia));
         $table->setup();
         $sortby = $table->get_sort_columns();
         if ($sortby && !$orderbyname) {

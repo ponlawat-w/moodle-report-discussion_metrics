@@ -49,7 +49,7 @@ class report_form extends moodleform
         $mform->setDefault('onlygroupworks', 0);
 
         $mform->addElement('hidden', 'id', $COURSE->id);
-        $mform->setType('id', PARAM_INT);
+        $mform->setType('id', PARAM_RAW);
 
         // Open and close dates.
         $mform->addElement('date_time_selector', 'starttime', get_string('reportstart', 'report_discussion_metrics'), array('optional' => true, 'startyear' => 2000, 'stopyear' => date("Y"), 'step' => 5));
@@ -65,6 +65,7 @@ class report_form extends moodleform
         $mform->setType('depth',PARAM_INT);
         $mform->addRule('depth', get_string('error'), 'numeric');
         */
+
         $perpage = array('0' => 'All', '10' => '10', '20' => '20', '30' => '30', '50' => '50', '100' => '100');
         $mform->addElement('select', 'pagesize', "Reports per page", $perpage);
 
@@ -82,7 +83,7 @@ class report_form extends moodleform
                 $stale_days[$i] = $i;
             }
         }
-        $myselect = $mform->addElement('select', 'stale_reply_days', get_string('stale_days', 'report_discussion_metrics'), $stale_days);
+        $myselect = $mform->addElement('select', 'stale_reply_day', get_string('stale_days', 'report_discussion_metrics'), $stale_days);
         $myselect->setSelected('7');
         $mform->hideIf('stale_reply_days', 'type', 'eq', 3);
         $mform->hideIf('stale_reply_days', 'type', 'eq', 4);
@@ -91,6 +92,7 @@ class report_form extends moodleform
 
         $mform->closeHeaderBefore('changefilter');
         $mform->addElement('submit', 'changefilter', get_string('showreport', 'report_discussion_metrics'));
+        $mform->addElement('button', 'download', get_string('download'),array('class'=>'download' ,'style'=>'background-color:#0f6fc5; color:#fff;border-color:#0a4e8a'));
 
     }
 }

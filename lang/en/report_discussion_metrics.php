@@ -53,6 +53,7 @@ $string['image'] = "#image";
 $string['link'] = "#link";
 $string['video'] = "#video";
 $string['total_reply'] = "Topic Replies";
+$string['direct_reply'] = "Direct replies to a new discussion post";
 //Reminder mail
 $string['remindsubject'] = 'Reminder to participate in the international exchange';
 $string['remindmessage'] = 'We\'ve noticed you haven\'t been participating in the international online exchange. Please log in and reply to others using the forums. Good luck!';

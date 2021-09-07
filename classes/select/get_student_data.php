@@ -95,7 +95,7 @@ class get_student_data
             $studentdata->posts = 0;
             $studentdata->replies = 0;
             $studentdata->discussion = 0;
-            $studentdata->replytime = '-';
+            // $studentdata->replytime = '-';
             $studentdata->maxdepth = 0;
             $studentdata->avedepth = 0;
             $studentdata->repliestoseed = 0;
@@ -103,7 +103,7 @@ class get_student_data
             $studentdata->audionum = 0;
             $studentdata->videonum = 0;
             $studentdata->linknum = 0;
-            $sumtime = 0;
+            // $sumtime = 0;
             $depthsum = 0;
             $depths = array();
             $studentdata->wordcount = 0;
@@ -115,7 +115,7 @@ class get_student_data
             $levels = array(0, 0, 0, 0);
             $studentdata->participants = 0;
             $studentdata->multinationals = 0;
-            $replytimearr = array();
+            // $replytimearr = array();
             $foravedepth = array();
             $studentdata->self_reply = 0;
             $studentdata->stale_reply = 0;
@@ -145,10 +145,10 @@ class get_student_data
                         if (in_array($post->parent, $firstposts)) {
                             $studentdata->repliestoseed++;
                         }
-                        if ($parentdata = $DB->get_record('forum_posts', array('id' => $post->parent))) {
-                            $sumtime = $sumtime + ($post->created - $parentdata->created); //for average
-                            $replytimearr[] = $post->created - $parentdata->created; //for median
-                        }
+                        // if ($parentdata = $DB->get_record('forum_posts', array('id' => $post->parent))) {
+                        //     $sumtime = $sumtime + ($post->created - $parentdata->created); //for average
+                        //     $replytimearr[] = $post->created - $parentdata->created; //for median
+                        // }
                         $studentdata->replies++;
 
                         //Depth
@@ -204,19 +204,19 @@ class get_student_data
                     $studentdata->replytime =  "{$dif_days}days<br>$dif_time";
                 }
                 */
-                if ($studentdata->replies == 1) {
-                    $studentdata->replytime = discussion_metrics_format_time($replytimearr[0]);
-                } elseif ($studentdata->replies == 2) {
-                    $studentdata->replytime = discussion_metrics_format_time(($replytimearr[1] + $replytimearr[0]) / 2);
-                } elseif ($studentdata->replies > 2) {
-                    sort($replytimearr);
-                    $middleval = floor(($studentdata->posts) / 2);
-                    if ($studentdata->replies % 2) {
-                        $studentdata->replytime = discussion_metrics_format_time($replytimearr[$middleval]);
-                    } else {
-                        $studentdata->replytime = discussion_metrics_format_time(($replytimearr[$middleval] + $replytimearr[$middleval + 1]) / 2);
-                    }
-                }
+                // if ($studentdata->replies == 1) {
+                //     $studentdata->replytime = discussion_metrics_format_time($replytimearr[0]);
+                // } elseif ($studentdata->replies == 2) {
+                //     $studentdata->replytime = discussion_metrics_format_time(($replytimearr[1] + $replytimearr[0]) / 2);
+                // } elseif ($studentdata->replies > 2) {
+                //     sort($replytimearr);
+                //     $middleval = floor(($studentdata->posts) / 2);
+                //     if ($studentdata->replies % 2) {
+                //         $studentdata->replytime = discussion_metrics_format_time($replytimearr[$middleval]);
+                //     } else {
+                //         $studentdata->replytime = discussion_metrics_format_time(($replytimearr[$middleval] + $replytimearr[$middleval + 1]) / 2);
+                //     }
+                // }
                 //if($studentdata->maxdepth) $studentdata->avedepth = $depthsum/$threads;
                 //$studentdata->threads = $threads;
                 //対話した相手の人数と国籍
@@ -321,7 +321,7 @@ class studentdata
     public $videonum = 0;
     public $audionum = 0;
     public $density = 0;
-    public $replytime = 0;
+    // public $replytime = 0;
     public $repliestoseed = 0;
     public $firstpost;
     public $lastpost;
