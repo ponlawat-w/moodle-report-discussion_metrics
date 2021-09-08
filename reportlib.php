@@ -83,8 +83,7 @@ class report_form extends moodleform
                 $stale_days[$i] = $i;
             }
         }
-        $myselect = $mform->addElement('select', 'stale_reply_day', get_string('stale_days', 'report_discussion_metrics'), $stale_days);
-        $myselect->setSelected('7');
+        $mform->addElement('select', 'stale_reply_days', get_string('stale_days', 'report_discussion_metrics'), $stale_days);
         $mform->hideIf('stale_reply_days', 'type', 'eq', 3);
         $mform->hideIf('stale_reply_days', 'type', 'eq', 4);
         $mform->hideIf('stale_reply_days', 'type', 'eq', 5);
