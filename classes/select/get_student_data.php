@@ -133,15 +133,45 @@ class get_student_data
                         $studentdata->posts++;
                     } elseif ($post->parent > 0) {
                         if (array_key_exists($post->parent, $time_created)) {
-                            if (strtotime('-' . $stale_reply_days . 'days', $post->created) > ($time_created[$post->parent])) {
-                                $studentdata->stale_reply++;
-                            }
-                        }
-                        if (isset($userids[$post->parent])) {
                             if ($userids[$post->parent] == $student->id) {
                                 $studentdata->self_reply++;
+                            } else if (strtotime('-' . $stale_reply_days . 'days', $post->created) > ($time_created[$post->parent])) {
+                                $studentdata->stale_reply++;
+                            } else {
+                                if (!isset($depths[$post->id])) {
+                                    $parent = $post->parent;
+                                    $depths[$post->id] = 1;
+                                    while ($parent != 0) {
+                                        if ($parentpost = $DB->get_record('forum_posts', array('id' => $parent))) {
+                                            if ($parentpost->userid == $student->id) {
+                                                if (isset($depths[$parentpost->id])) {
+                                                    unset($depths[$parentpost->id]);
+                                                }
+                                                $depths[$parentpost->id] = 0;
+                                                $depths[$post->id]++;
+                                            }
+                                            $parent = $parentpost->parent;
+                                            $foravedepth[$post->id] = $depths[$post->id];
+                                        } else {
+                                            //The parent data has deleted
+                                            $depths[$post->id] = 0;
+                                            continue;
+                                        }
+                                    }
+                                    if ($studentdata->maxdepth < $depths[$post->id]) {
+                                        $studentdata->maxdepth = $depths[$post->id];
+                                    }
+                                    if ($depths[$post->id] < 4) {
+                                        $levels[$depths[$post->id] - 1]++;
+                                    } else {
+                                        $levels[3]++; //Over Level 4
+                                    }
+                                }
                             }
                         }
+                        // if (isset($userids[$post->parent])) {
+
+                        // }
                         if (in_array($post->parent, $firstposts)) {
                             $studentdata->repliestoseed++;
                         }
@@ -152,35 +182,7 @@ class get_student_data
                         $studentdata->replies++;
 
                         //Depth
-                        if (!isset($depths[$post->id])) {
-                            $parent = $post->parent;
-                            $depths[$post->id] = 1;
-                            while ($parent != 0) {
-                                if ($parentpost = $DB->get_record('forum_posts', array('id' => $parent))) {
-                                    if ($parentpost->userid == $student->id) {
-                                        if (isset($depths[$parentpost->id])) {
-                                            unset($depths[$parentpost->id]);
-                                        }
-                                        $depths[$parentpost->id] = 0;
-                                        $depths[$post->id]++;
-                                    }
-                                    $parent = $parentpost->parent;
-                                    $foravedepth[$post->id] = $depths[$post->id];
-                                } else {
-                                    //The parent data has deleted
-                                    $depths[$post->id] = 0;
-                                    continue;
-                                }
-                            }
-                            if ($studentdata->maxdepth < $depths[$post->id]) {
-                                $studentdata->maxdepth = $depths[$post->id];
-                            }
-                            if ($depths[$post->id] < 4) {
-                                $levels[$depths[$post->id] - 1]++;
-                            } else {
-                                $levels[3]++; //Over Level 4
-                            }
-                        }
+
                     }
 
                     $wordnum = count_words($post->message);

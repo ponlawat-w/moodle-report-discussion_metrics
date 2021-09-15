@@ -146,7 +146,7 @@ $PAGE->set_heading($course->fullname);
 $PAGE->requires->js_call_amd('report_discussion_metrics/script', 'init');
 echo $OUTPUT->header();
 $mform->display();
-echo html_writer::tag('input','',array('type'=>'hidden','id'=>'courseid1','value'=>$courseid));
+echo html_writer::tag('input', '', array('type' => 'hidden', 'id' => 'courseid1', 'value' => $courseid));
 
 $strname = get_string('fullname');
 $strfirstname = get_string('firstname');
@@ -254,7 +254,7 @@ if ($type || $tsort || $treset || $page) {
             $data = array_slice($data, $page * $pagesize, $pagesize);
         }
         foreach ($data as $row) {
-            $trdata = array($row->firstname, $row->surname, $row->country, $row->institution, $row->group, $row->discussion, $row->participants, $row->multinationals, $row->posts, $row->replies, $row->stale_reply, $row->self_reply, $row->repliestoseed,$row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->imagenum, $row->videonum, $row->audionum, $row->linknum);
+            $trdata = array($row->firstname, $row->surname, $row->country, $row->institution, $row->group, $row->discussion, $row->participants, $row->multinationals, $row->posts, $row->replies, $row->stale_reply, $row->self_reply, $row->repliestoseed, $row->l1, $row->l2, $row->l3, $row->l4, $row->maxdepth, $row->avedepth, $row->wordcount, $row->views, $row->imagenum, $row->videonum, $row->audionum, $row->linknum);
             $table->add_data($trdata);
         }
     } elseif ($type == 2) { //Goupごと

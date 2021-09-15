@@ -115,15 +115,44 @@ class get_group_data
                                 $groupdata->posts++;
                             } elseif ($post->parent > 0) {
                                 if (array_key_exists($post->parent, $time_created)) {
-                                    if (strtotime('-' . $stale_reply_days . 'days', $post->created) > ($time_created[$post->parent])) {
-                                        $groupdata->stale_reply++;
-                                    }
-                                }
-                                if (isset($userids[$post->parent])) {
                                     if ($userids[$post->parent] == $student->id) {
                                         $groupdata->self_reply++;
+                                    } elseif (strtotime('-' . $stale_reply_days . 'days', $post->created) > ($time_created[$post->parent])) {
+                                        $groupdata->stale_reply++;
+                                    } else {
+                                        if (!isset($depths[$post->id])) {
+                                            $parent = $post->parent;
+                                            $depths[$post->id] = 1;
+                                            while ($parent != 0) {
+                                                if ($parentpost = $DB->get_record('forum_posts', array('id' => $parent))) {
+                                                    if ($parentpost->userid == $student->id) {
+                                                        if (isset($depths[$parentpost->id])) {
+                                                            unset($depths[$parentpost->id]);
+                                                        }
+                                                        $depths[$parentpost->id] = 0;
+                                                        $depths[$post->id]++;
+                                                    }
+                                                    $parent = $parentpost->parent;
+                                                    $foravedepth[$post->id] = $depths[$post->id];
+                                                } else {
+                                                    //The parent data has deleted
+                                                    $depths[$post->id] = 0;
+                                                    continue;
+                                                }
+                                            }
+                                            if ($groupdata->maxdepth < $depths[$post->id]) {
+                                                $groupdata->maxdepth = $depths[$post->id];
+                                            }
+                                            if ($depths[$post->id] < 4) {
+                                                $levels[$depths[$post->id] - 1]++;
+                                            } else {
+                                                $levels[3]++; //Over Level 4
+                                            }
+                                        }
                                     }
                                 }
+
+
                                 if (in_array($post->parent, $firstposts)) {
                                     $groupdata->repliestoseed++;
                                 }
@@ -133,35 +162,7 @@ class get_group_data
                                 $groupdata->replies++;
                                 //BL Customization
                                 //Depth
-                                if (!isset($depths[$post->id])) {
-                                    $parent = $post->parent;
-                                    $depths[$post->id] = 1;
-                                    while ($parent != 0) {
-                                        if ($parentpost = $DB->get_record('forum_posts', array('id' => $parent))) {
-                                            if ($parentpost->userid == $student->id) {
-                                                if (isset($depths[$parentpost->id])) {
-                                                    unset($depths[$parentpost->id]);
-                                                }
-                                                $depths[$parentpost->id] = 0;
-                                                $depths[$post->id]++;
-                                            }
-                                            $parent = $parentpost->parent;
-                                            $foravedepth[$post->id] = $depths[$post->id];
-                                        } else {
-                                            //The parent data has deleted
-                                            $depths[$post->id] = 0;
-                                            continue;
-                                        }
-                                    }
-                                    if ($groupdata->maxdepth < $depths[$post->id]) {
-                                        $groupdata->maxdepth = $depths[$post->id];
-                                    }
-                                    if ($depths[$post->id] < 4) {
-                                        $levels[$depths[$post->id] - 1]++;
-                                    } else {
-                                        $levels[3]++; //Over Level 4
-                                    }
-                                }
+
                             }
                             //BL Customization
 
