@@ -98,6 +98,7 @@ class get_group_data
                     $studentdata->replytime = 0;
                     $studentdata->wordcount = 0;
                     $multimedianum = 0;
+                    $foravedepth = array();
                     $studentdata->participants = 0;
                     $studentdata->multinationals = 0;
 
@@ -204,9 +205,7 @@ class get_group_data
                                 $groupdata->audionum += $multimediaobj->audio;
                                 $groupdata->linknum += $multimediaobj->link;
                             }
-                        }
-                        //Average depth
-                        if ($foravedepth) $groupdata->avedepth = round(array_sum($foravedepth) / count($foravedepth), 3);
+                        }                   
 
                         $groupdata->discussion += count($posteddiscussions);
                         $groupdata->multimedia += $multimedianum;
@@ -244,7 +243,9 @@ class get_group_data
                         $studentdata->discussion = 0;
                         $groupdata->notrepliedusers++;
                     }
-
+                    //Average depth
+                    $direct_reply = $groupdata->repliestoseed;
+                    if ($foravedepth) $groupdata->avedepth = round((array_sum($foravedepth)+$direct_reply) / (count($foravedepth)+$direct_reply), 3);
                     //View
                     $logtable = 'logstore_standard_log';
                     $eventname = '\\\\mod_forum\\\\event\\\\discussion_viewed';
@@ -321,9 +322,10 @@ class get_group_data
                 $groupdata->posts = $groupdata->posts; //round($groupdata->posts/$groupdata->users,3);
                 $groupdata->replies = $groupdata->replies; //round($groupdata->replies/$groupdata->users,3);
                 $groupdata->multinationals = count($countries);
+                
             }
             $this->data[$group->id] = $groupdata;
-            $groupdata->l1 = $levels[0];
+            $groupdata->l1 = $levels[0]+$groupdata->repliestoseed;;
             $groupdata->l2 = $levels[1];
             $groupdata->l3 = $levels[2];
             $groupdata->l4 = $levels[3];

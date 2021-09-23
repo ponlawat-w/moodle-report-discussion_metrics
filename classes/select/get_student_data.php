@@ -195,7 +195,8 @@ class get_student_data
                         $linknum += $multimediaobj->link;
                     }
                 }
-                if ($foravedepth) $studentdata->avedepth = round(array_sum($foravedepth) / count($foravedepth), 3);
+                $direct_reply = $studentdata->repliestoseed;
+                if ($foravedepth) $studentdata->avedepth = round((array_sum($foravedepth)+$direct_reply) / (count($foravedepth)+$direct_reply), 3);
                 $studentdata->discussion = count($posteddiscussions);
                 $studentdata->multimedia = $multimedianum;
                 /*
@@ -263,7 +264,7 @@ class get_student_data
             $studentdata->videonum = $videonum;
             $studentdata->linknum = $linknum;
             $studentdata->levels = $levels;
-            $studentdata->l1 = $levels[0];
+            $studentdata->l1 = $levels[0]+ $studentdata->repliestoseed;
             $studentdata->l2 = $levels[1];
             $studentdata->l3 = $levels[2];
             $studentdata->l4 = $levels[3];
