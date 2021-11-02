@@ -83,6 +83,8 @@ class get_group_data
                 $gropuserlist = array_keys($groupusers);
                 //                $total = array();
                 //                $id = "(";
+                $avedepth = 0;
+                $avedepthcount = 0;
                 foreach ($groupusers as $guser) {
                     $student = $guser;
                     $studentdata = (object)"";
@@ -249,11 +251,12 @@ class get_group_data
                     {
                         $groupdata->maxdepth = 1;
                     }
-                    if ($foravedepth || $direct_reply)
+                    if ($foravedepth)
                     { 
-                        $groupdata->avedepth = round((array_sum($foravedepth)+$direct_reply) / (count($foravedepth)+$direct_reply), 3);
-                    
-                    }    //View
+                        // $groupdata->avedepth += round((array_sum($foravedepth)+$direct_reply) / (count($foravedepth)+$direct_reply), 3);
+                        $avedepth += array_sum($foravedepth);
+                        $avedepthcount += count($foravedepth);
+                    }  
                     $logtable = 'logstore_standard_log';
                     $eventname = '\\\\mod_forum\\\\event\\\\discussion_viewed';
                     if ($forumid) {
@@ -309,7 +312,10 @@ class get_group_data
                     }
                     $groupdata->users++;
                 }
-
+                if ($foravedepth || $direct_reply)
+                { 
+                    $groupdata->avedepth = round((($avedepth+$direct_reply)/ ($avedepthcount+$direct_reply)), 3);
+                }
                 //                $id .= "0)";
 
                 // Bl Customization
