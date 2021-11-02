@@ -195,10 +195,16 @@ class get_student_data
                         $linknum += $multimediaobj->link;
                     }
                 }
-                $direct_reply = $studentdata->repliestoseed;
-                if ($foravedepth) $studentdata->avedepth = round((array_sum($foravedepth)+$direct_reply) / (count($foravedepth)+$direct_reply), 3);
-                $studentdata->discussion = count($posteddiscussions);
-                $studentdata->multimedia = $multimedianum;
+            $direct_replies = $studentdata->repliestoseed;
+            if($studentdata->maxdepth == 0 && $direct_replies != 0)
+            {
+                $studentdata->maxdepth = 1;
+            }
+
+            if ($foravedepth || $direct_replies)
+            { 
+                $studentdata->avedepth = round(((array_sum($foravedepth)+$direct_replies)/ (count($foravedepth)+$direct_replies)), 3);
+            }
                 /*
                 if($sumtime){
                     $dif = ceil($sumtime/$studentdata->replies);

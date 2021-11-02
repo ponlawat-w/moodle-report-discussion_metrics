@@ -9,8 +9,8 @@ $courseid = required_param('course', PARAM_INT);
 $type = required_param('type', PARAM_INT);
 $groupid = optional_param('group', 0, PARAM_INT);
 $grouoingid = optional_param('grouping', 0, PARAM_INT);
-$start = optional_param('start', '', PARAM_RAW);
-$end = optional_param('end', '', PARAM_RAW);
+$starttime = optional_param('starttime', '', PARAM_RAW);
+$endtime = optional_param('endtime', '', PARAM_RAW);
 $onlygroupworks = optional_param('onlygroupworks', 0, PARAM_INT);
 $stale_reply_days = optional_param('stale_reply_days', 0, PARAM_INT);
 
@@ -74,20 +74,20 @@ if ($grouoingid) {
     }
 }
 
-if (isset($fromform->starttime)) {
-    $starttime = $fromform->starttime;
-} elseif ($start) {
-    $starttime = $start;
-} else {
-    $starttime = 0;
-}
-if (isset($fromform->endtime)) {
-    $endtime = $fromform->endtime;
-} elseif ($end) {
-    $endtime = $end;
-} else {
-    $endtime = 0;
-}
+//if (isset($fromform->starttime)) {
+//    $starttime = $fromform->starttime;
+//} elseif ($start) {
+//    $starttime = $start;
+//} else {
+//    $starttime = 0;
+//}
+//if (isset($fromform->endtime)) {
+//    $endtime = $fromform->endtime;
+//} elseif ($end) {
+//    $endtime = $end;
+//} else {
+//    $endtime = 0;
+//}
 
 if ($forumid) {
     $students = get_users_by_capability($modcontext, 'mod/forum:viewdiscussion');

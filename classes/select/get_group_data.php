@@ -245,8 +245,15 @@ class get_group_data
                     }
                     //Average depth
                     $direct_reply = $groupdata->repliestoseed;
-                    if ($foravedepth) $groupdata->avedepth = round((array_sum($foravedepth)+$direct_reply) / (count($foravedepth)+$direct_reply), 3);
-                    //View
+                    if($groupdata->maxdepth == 0 && $direct_reply != 0)
+                    {
+                        $groupdata->maxdepth = 1;
+                    }
+                    if ($foravedepth || $direct_reply)
+                    { 
+                        $groupdata->avedepth = round((array_sum($foravedepth)+$direct_reply) / (count($foravedepth)+$direct_reply), 3);
+                    
+                    }    //View
                     $logtable = 'logstore_standard_log';
                     $eventname = '\\\\mod_forum\\\\event\\\\discussion_viewed';
                     if ($forumid) {
