@@ -204,7 +204,8 @@ class get_student_data
             if ($foravedepth || $direct_replies)
             { 
                 $studentdata->avedepth = round(((array_sum($foravedepth)+$direct_replies)/ (count($foravedepth)+$direct_replies)), 3);
-            }
+	    }
+	    $studentdata->discussion = count($posteddiscussions);
                 /*
                 if($sumtime){
                     $dif = ceil($sumtime/$studentdata->replies);
