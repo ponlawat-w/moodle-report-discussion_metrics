@@ -56,6 +56,7 @@ class get_student_data
             $userids[$all_replies->id] = $all_replies->userid;
             $time_created[$all_replies->id] = $all_replies->created;
         }
+        $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
         foreach ($students as $student) {
             $studentdata = new studentdata();
 
@@ -194,6 +195,12 @@ class get_student_data
                         $audionum += $multimediaobj->audio;
                         $linknum += $multimediaobj->link;
                     }
+                    $mediaattachments = report_discussion_metrics_countattachmentmultimedia($discussionmodcontextidlookup[$post->discussion], $post->id);
+                    $multimedianum += $mediaattachments->num;
+                    $imgnum += $mediaattachments->img;
+                    $videonum += $mediaattachments->video;
+                    $audionum += $mediaattachments->audio;
+                    $linknum += $mediaattachments->link;
                 }
             $direct_replies = $studentdata->repliestoseed;
             if($studentdata->maxdepth == 0 && $direct_replies != 0)
@@ -315,10 +322,16 @@ class get_student_data
 
 class studentdata
 {
-
+    public $id;
     public $fullname;
+    public $firstname;
+    public $surname;
+    public $country;
+    public $institution;
+    public $group;
     public $posts;
     public $replies = 0;
+    public $discussion = 0;
     public $maxdepth = 0;
     public $avedepth = 0;
     public $threads = 0;
@@ -326,9 +339,12 @@ class studentdata
     public $wordcount = 0;
     public $participants = 0;
     public $multinationals = 0;
+    public $self_reply = 0;
+    public $stale_reply = 0;
     public $multimedia = 0;
     public $imagenum = 0;
     public $videonum = 0;
+    public $linknum = 0;
     public $audionum = 0;
     public $density = 0;
     // public $replytime = 0;

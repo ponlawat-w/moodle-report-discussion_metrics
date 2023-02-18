@@ -44,6 +44,7 @@ class get_country_data {
         foreach($students as $student){
             $countryusers[$student->country][$student->id] = $student;
         }
+        $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
         foreach($countryusers as $key=>$countrystudents){
             $countrydata = new countrydata;
             if($key){
@@ -67,7 +68,7 @@ class get_country_data {
             
             foreach($countrystudents as $countrystudent){
                 $studentdata = (object)"";
-                $studentdata->id = $student->id;
+                $studentdata->id = $countrystudent->id;
 
                 //Discussion
                 $posteddiscussions = array();
@@ -80,7 +81,7 @@ class get_country_data {
                 $multimedianum = 0;
                 $studentdata->participants = 0;
                 $studentdata->multinationals = 0;
-                $allpostssql = 'SELECT * FROM {forum_posts} WHERE parent>0 AND userid='.$student->id.' AND discussion IN '.$discussionarray;
+                $allpostssql = 'SELECT * FROM {forum_posts} WHERE parent>0 AND userid='.$countrystudent->id.' AND discussion IN '.$discussionarray;
                 if($starttime){
                     $allpostssql = $allpostssql.' AND created>'.$starttime;
                 }
@@ -135,6 +136,8 @@ class get_country_data {
                         if($multimediaobj = get_mulutimedia_num($post->message)){
                             $multimedianum += $multimediaobj->num;
                         }
+                        $multimediaattachments = report_discussion_metrics_countattachmentmultimedia($discussionmodcontextidlookup[$post->discussion], $post->id);
+                        $multimedianum += $multimediaattachments->num;
                     }
                     $countrydata->discussion += count($posteddiscussions);
                     $countrydata->multimedia += $multimedianum;
@@ -165,10 +168,10 @@ class get_country_data {
                 $eventname = '\\\\mod_forum\\\\event\\\\discussion_viewed';
                 if($forumid){
                     $cm = get_coursemodule_from_instance('forum', $forumid, $courseid, false, MUST_EXIST);
-                    $viewsql = "SELECT * FROM {logstore_standard_log} WHERE userid=$student->id AND contextinstanceid=$cm->id AND contextlevel=".CONTEXT_MODULE." AND eventname='$eventname'";
+                    $viewsql = "SELECT * FROM {logstore_standard_log} WHERE userid=$countrystudent->id AND contextinstanceid=$cm->id AND contextlevel=".CONTEXT_MODULE." AND eventname='$eventname'";
                 }else{
-                    $views = $DB->get_records($logtable,array('userid'=>$student->id,'courseid'=>$courseid,'eventname'=>$eventname));
-                    $viewsql = "SELECT * FROM {logstore_standard_log} WHERE userid=$student->id AND courseid=$courseid AND eventname='$eventname'";
+                    $views = $DB->get_records($logtable,array('userid'=>$countrystudent->id,'courseid'=>$courseid,'eventname'=>$eventname));
+                    $viewsql = "SELECT * FROM {logstore_standard_log} WHERE userid=$countrystudent->id AND courseid=$courseid AND eventname='$eventname'";
                 }
                 if($starttime){
                     $viewsql = $viewsql.' AND timecreated>'.$starttime;
@@ -180,10 +183,10 @@ class get_country_data {
                 $countrydata->views += count($views);
 
                 //First post & Last post
-                $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
+                $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid='.$countrystudent->id.' AND discussion IN '.$discussionarray;
                 if($allposts){
 
-                    $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
+                    $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid='.$countrystudent->id.' AND discussion IN '.$discussionarray;
                     if($starttime){
                         $firstpostsql = $firstpostsql.' AND created>'.$starttime;
                     }
@@ -197,7 +200,7 @@ class get_country_data {
                         $countrydata->firstpost =  $firstpostdate;
                     }
 
-                    $lastpostsql = 'SELECT MAX(created) FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
+                    $lastpostsql = 'SELECT MAX(created) FROM {forum_posts} WHERE userid='.$countrystudent->id.' AND discussion IN '.$discussionarray;
                     if($starttime){
                         $lastpostsql = $lastpostsql.' AND created>'.$starttime;
                     }
@@ -239,6 +242,7 @@ class countrydata{
     public $name;
     public $posts;
     public $replies = 0;
+    public $discussion = 0;
     //public $maxdepth = 0;
     //public $avedepth = 0;
     public $threads = 0;

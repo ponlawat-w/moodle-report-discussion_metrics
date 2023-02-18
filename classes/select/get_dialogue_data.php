@@ -39,9 +39,13 @@ class get_dialogue_data {
     
     public function __construct($courseid,$discussions,$groups=NULL,$starttime=0,$endtime=0){
         global $DB;
+        if (!isset($countries)) {
+            $countries = [];
+        }
         if(!$groups){
             $groups = groups_get_all_groups($courseid);
         }
+        $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
         foreach($groups as $group){
             if(!$groupusers = groups_get_members($group->id, 'u.id', 'u.id ASC')){
                 continue;
@@ -94,6 +98,8 @@ class get_dialogue_data {
                     if($multimediaobj = get_mulutimedia_num($post->message)){
                         $dialoguedata->multimedia += $multimediaobj->num;
                     }
+                    $mediaattachments = report_discussion_metrics_countattachmentmultimedia($discussionmodcontextidlookup[$post->discussion], $post->id);
+                    $dialoguedata->multimedia += $mediaattachments->num;
                     //Be replied
                     if($DB->get_records('forum_posts',array('parent'=>$post->id))){
                         $bereplied++;
@@ -172,6 +178,9 @@ class dialoguedata{
     public $maxdepth = 0;
     public $avedepth = 0;
     public $threads = 0;
+    public $threadsperstudent = 0;
+    public $threadspercountry = 0;
+    public $levels = 0;
     public $views = 0;
     public $wordcount = 0;
     public $participants = 0;

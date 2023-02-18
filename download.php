@@ -151,7 +151,7 @@ if ($type == 1) {
         $csvexport->add_data($line);
     }
 } elseif ($type == 3) { //Dialogue(discussion)の集計
-    $discussiondata = new report_discussion_metrics\select\get_discussion_data($students, $discussions, $groupid, $starttime, $endtime);
+    $discussiondata = new report_discussion_metrics\select\get_discussion_data($courseid, $students, $discussions, $groupid, $starttime, $endtime);
     $data = $discussiondata->data;
     $csvexport->add_data(array('forumname', 'name', 'posts', 'bereplied', 'threads', 'maxdepth', 'l1', 'l2', 'l3', 'l4', 'multimedia', 'replytime', 'density'));
     foreach ($data as $row) {

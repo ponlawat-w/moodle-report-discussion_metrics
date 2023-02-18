@@ -37,7 +37,7 @@ class get_discussion_data {
     
     public $data = array();
     
-    public function __construct($students,$discussions,$groupid,$starttime=0,$endtime=0){
+    public function __construct($courseid, $students, $discussions, $groupid, $starttime = 0, $endtime = 0) {
         global $DB;
         
         if($groupid){
@@ -47,6 +47,7 @@ class get_discussion_data {
             }
             $wheregroupusers .= '0)';
         }
+        $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
 
         foreach($discussions as $discussion){
             $threads = 0;
@@ -91,6 +92,8 @@ class get_discussion_data {
                 if($multimediaobj = get_mulutimedia_num($post->message)){
                     $discussiondata->multimedia += $multimediaobj->num;
                 }
+                $mediaattachments = report_discussion_metrics_countattachmentmultimedia($discussionmodcontextidlookup[$post->discussion], $post->id);
+                $discussiondata->multimedia += $mediaattachments->num;
                 //Be replied
                 if($DB->get_records('forum_posts',array('parent'=>$post->id))){
                     $bereplied++;
@@ -177,6 +180,7 @@ class discussiondata{
     public $multimedia = 0;
     public $density = 0;
     public $replytime = 0;
+    public $levels;
     public $l1;
     public $l2;
     public $l3;

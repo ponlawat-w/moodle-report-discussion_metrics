@@ -51,6 +51,7 @@ class get_group_data
             $userids[$all_replies->id] = $all_replies->userid;
             $time_created[$all_replies->id] = $all_replies->created;
         }
+        $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
         foreach ($allgroups as $group) {
             $groupdata = new groupdata;
             $groupdata->name = $group->name;
@@ -207,6 +208,12 @@ class get_group_data
                                 $groupdata->audionum += $multimediaobj->audio;
                                 $groupdata->linknum += $multimediaobj->link;
                             }
+                            $mediattachments = report_discussion_metrics_countattachmentmultimedia($discussionmodcontextidlookup[$post->discussion], $post->id);
+                            $multimedianum += $mediattachments->num;
+                            $groupdata->imgnum += $mediattachments->img;
+                            $groupdata->videonum += $mediattachments->video;
+                            $groupdata->audionum += $mediattachments->audio;
+                            $groupdata->linknum += $mediattachments->link;
                         }                   
 
                         $groupdata->discussion += count($posteddiscussions);
@@ -353,6 +360,7 @@ class groupdata
     public $name;
     public $posts;
     public $replies = 0;
+    public $discussion = 0;
     //public $maxdepth = 0;
     //public $avedepth = 0;
     public $threads = 0;
@@ -366,6 +374,18 @@ class groupdata
     public $users = 0;
     public $notrepliedusers = 0;
     public $repliedusers = 0;
+    public $self_reply = 0;
+    public $stale_reply = 0;
+    public $l1;
+    public $l2;
+    public $l3;
+    public $l4;
+    public $maxdepth = 0;
+    public $avedepth = 0;
+    public $imgnum = 0;
+    public $videonum = 0;
+    public $linknum = 0;
+    public $audionum = 0;
     public $repliestoseed = 0;
     public $firstpost;
     public $lastpost;

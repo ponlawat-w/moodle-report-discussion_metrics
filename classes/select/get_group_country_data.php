@@ -45,6 +45,7 @@ class get_group_country_data
         if (!$allgroups) {
             $allgroups = groups_get_all_groups($courseid);
         }
+        $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
         foreach ($allgroups as $group) {
             $countryusers = array();
             $groupusers = groups_get_members($group->id, 'u.id', 'u.id ASC');
@@ -143,6 +144,8 @@ class get_group_country_data
                             if ($multimediaobj = get_mulutimedia_num($post->message)) {
                                 $multimedianum += $multimediaobj->num;
                             }
+                            $mediaattachments = report_discussion_metrics_countattachmentmultimedia($discussionmodcontextidlookup[$post->discussion], $post->id);
+                            $multimedianum += $mediaattachments->num;
                         }
                         $groupcountrydata->discussion += count($posteddiscussions);
                         $groupcountrydata->multimedia += $multimedianum;
@@ -248,6 +251,7 @@ class groupcountrydata
     public $groupname;
     public $posts;
     public $replies = 0;
+    public $discussion = 0;
     //public $maxdepth = 0;
     //public $avedepth = 0;
     public $threads = 0;

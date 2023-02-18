@@ -278,7 +278,7 @@ if ($type || $tsort || $treset || $page) {
         }
     } elseif ($type == 3) { //Dialogue(discussion)の集計
         //$discussiondata = new report_discussion_metrics\select\get_discussion_data($students,$courseid,$forumid,$groupfilter,$starttime,$endtime);
-        $discussiondata = new report_discussion_metrics\select\get_discussion_data($students, $discussions, $groupid, $starttime, $endtime);
+        $discussiondata = new report_discussion_metrics\select\get_discussion_data($courseid, $students, $discussions, $groupid, $starttime, $endtime);
         $data = $discussiondata->data;
         $table->define_columns(array('forumname', 'name', 'posts', 'bereplied', 'international_reply', 'domestic_reply', 'self_reply', 'threads', 'maxdepth', 'l1', 'l2', 'l3', 'l4', 'multimedia', 'replytime', 'density'));
         $table->define_headers(array("Forum", 'Discussion', '#posts', '#been replied to', $strinternational, $strdomestic, $strself, '#threads', 'Max depth', '#L1', '#L2', '#L3', '#L4', '#multimedia', 'Reply time', 'Density'));
