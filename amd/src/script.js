@@ -1,4 +1,4 @@
-define(['jquery'], function () {
+define(['jquery'], function ($) {
     return {
         init: function () {
             $(document).ready(function () {
@@ -8,17 +8,20 @@ define(['jquery'], function () {
                     var forum = $('#id_forum').val();
                     var group = $('#id_group').val();
                     var grouping = $('#id_grouping').val();
-                    starttime = 0;
-                    endtime = 0;
-                    start = $('#id_starttime_enabled').is(":checked")
-                    end = $('#id_endtime_enabled').is(":checked");
+                    var starttime = 0;
+                    var endtime = 0;
+                    var start = $('#id_starttime_enabled').is(":checked");
+                    var end = $('#id_endtime_enabled').is(":checked");
                     if (start == true) {
                         var starttime_day = $('#id_starttime_day').val();
                         var starttime_month = $('#id_starttime_month').val();
                         var starttime_year = $('#id_starttime_year').val();
                         var starttime_hour = $('#id_starttime_hour').val();
                         var starttime_minute = $('#id_starttime_minute').val();
-                        var starttime = new Date(starttime_month + "-" + starttime_day + "-" + starttime_year + " " + starttime_hour + ":" + starttime_minute).getTime();
+                        var starttime = new Date(
+                            starttime_month + "-" + starttime_day + "-" + starttime_year +
+                            " " + starttime_hour + ":" + starttime_minute
+                        ).getTime();
                         starttime = starttime / 1000;
                     }
                     if (end == true) {
@@ -38,12 +41,17 @@ define(['jquery'], function () {
                         onlygroupworks = 0;
                     }
                     var stale_reply_days = $('#id_stale_reply_days').val();
+                    const engagementmethod = $('#id_engagementmethod').val();
                     var courseid = $('#courseid1').val();
-                    window.location.replace('download.php?type=' + type + '&forum=' + forum + '&group=' + group + '&starttime=' + starttime +
-                        '&endtime=' + endtime + '&stale_reply_days=' + stale_reply_days + '&course=' + courseid + '&grouping=' + grouping + '&onlygroupworks=' + onlygroupworks);
-
+                    window.location.replace(
+                        'download.php?type=' + type + '&forum=' + forum +
+                        '&group=' + group + '&starttime=' + starttime +
+                        '&endtime=' + endtime + '&stale_reply_days=' + stale_reply_days +
+                        '&course=' + courseid + '&grouping=' + grouping +
+                        '&onlygroupworks=' + onlygroupworks + '&engagementmethod=' + engagementmethod
+                    );
                 });
-            })
+            });
         }
-    }
-})
+    };
+});
