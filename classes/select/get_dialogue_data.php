@@ -24,7 +24,12 @@
 
 namespace report_discussion_metrics\select;
 
+use engagement;
+use engagementresult;
+
 defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/../engagement.php');
 
 /**
  * The viewed event class.
@@ -37,7 +42,7 @@ class get_dialogue_data {
     
     public $data = array();
     
-    public function __construct($courseid,$discussions,$groups=NULL,$starttime=0,$endtime=0){
+    public function __construct($courseid,$discussions,$groups=NULL,$starttime=0,$endtime=0, $engagementmethod){
         global $DB;
         if (!isset($countries)) {
             $countries = [];
@@ -46,6 +51,10 @@ class get_dialogue_data {
             $groups = groups_get_all_groups($courseid);
         }
         $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
+        $engagementcalculators = [];
+        foreach ($discussions as $discussion) {
+            $engagementcalculators[$discussion->id] = engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
+        }
         foreach($groups as $group){
             if(!$groupusers = groups_get_members($group->id, 'u.id', 'u.id ASC')){
                 continue;
@@ -107,25 +116,6 @@ class get_dialogue_data {
                     //Depth
                     $parent = $post->parent;
                     if($parent == $discussion->firstpost) $threads++;
-                    if($parent){
-                        $depth = 0;
-                        while($parent!=0){
-                            if($parentpost = $DB->get_record('forum_posts',array('id'=>$parent))){
-                                $depth++;
-                                $parent = $parentpost->parent;
-                            }
-                        }
-                        if($dialoguedata->maxdepth < $depth){
-                            $dialoguedata->maxdepth = $depth;
-                        }
-                        $depthsum += $depth;
-                        if($depth<4){
-                            $levels[$depth-1]++;
-                        }else{
-                            $levels[3]++; //Over Level 4
-                        }
-                        $dialoguedata->replies++;
-                    }
 
                     //TempTimes
                     //if($firstpost > $post->created) $firstpost = $post->created;
@@ -133,15 +123,22 @@ class get_dialogue_data {
                     $replytimearr[] = $post->created;
                 }
 
+                $engagementresult = new engagementresult();
+                foreach ($groupusers as $user) {
+                    $engagementresult->add($engagementcalculators[$discussion->id]->calculate($user->id));
+                }
+
                 //if($dialoguedata->maxdepth) $dialoguedata->avedepth = $depthsum/$threads;
                 $dialoguedata->threads = $threads;
                 $dialoguedata->threadsperstudent = $threads/$groupusernum;
                 $dialoguedata->threadspercountry = $threads/$countrynum;
                 $dialoguedata->levels = $levels;
-                $dialoguedata->l1 = $levels[0];
-                $dialoguedata->l2 = $levels[1];
-                $dialoguedata->l3 = $levels[2];
-                $dialoguedata->l4 = $levels[3];
+                $dialoguedata->l1 = $engagementresult->getl1();
+                $dialoguedata->l2 = $engagementresult->getl2();
+                $dialoguedata->l3 = $engagementresult->getl3();
+                $dialoguedata->l4 = $engagementresult->getl4up();
+                $dialoguedata->maxdepth = $engagementresult->getmax();
+                $dialoguedata->avedepth = $engagementresult->getaverage();
                 $dialoguedata->bereplied = $bereplied;
                 $dialoguedata->groupname = $group->name;
 

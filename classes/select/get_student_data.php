@@ -24,7 +24,12 @@
 
 namespace report_discussion_metrics\select;
 
+use engagement;
+use engagementresult;
+
 defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/../engagement.php');
 
 /**
  * The viewed event class.
@@ -38,11 +43,16 @@ class get_student_data
 
     public $data = array();
 
-    public function __construct($students, $courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $starttime = 0, $endtime = 0, $stale_reply_days)
+    public function __construct($students, $courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $starttime = 0, $endtime = 0, $stale_reply_days, $engagementmethod)
     {
         global $DB;
 
         $countries = get_string_manager()->get_list_of_countries();
+
+        $engagementcalculators = [];
+        foreach ($discussions as $discussion) {
+            $engagementcalculators[] = engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
+        }
 
         /*
         foreach($discussions as $discussion){
@@ -138,36 +148,6 @@ class get_student_data
                                 $studentdata->self_reply++;
                             } else if (strtotime('-' . $stale_reply_days . 'days', $post->created) > ($time_created[$post->parent])) {
                                 $studentdata->stale_reply++;
-                            } else {
-                                if (!isset($depths[$post->id])) {
-                                    $parent = $post->parent;
-                                    $depths[$post->id] = 1;
-                                    while ($parent != 0) {
-                                        if ($parentpost = $DB->get_record('forum_posts', array('id' => $parent))) {
-                                            if ($parentpost->userid == $student->id) {
-                                                if (isset($depths[$parentpost->id])) {
-                                                    unset($depths[$parentpost->id]);
-                                                }
-                                                $depths[$parentpost->id] = 0;
-                                                $depths[$post->id]++;
-                                            }
-                                            $parent = $parentpost->parent;
-                                            $foravedepth[$post->id] = $depths[$post->id];
-                                        } else {
-                                            //The parent data has deleted
-                                            $depths[$post->id] = 0;
-                                            continue;
-                                        }
-                                    }
-                                    if ($studentdata->maxdepth < $depths[$post->id]) {
-                                        $studentdata->maxdepth = $depths[$post->id];
-                                    }
-                                    if ($depths[$post->id] < 4) {
-                                        $levels[$depths[$post->id] - 1]++;
-                                    } else {
-                                        $levels[3]++; //Over Level 4
-                                    }
-                                }
                             }
                         }
                         // if (isset($userids[$post->parent])) {
@@ -202,56 +182,60 @@ class get_student_data
                     $audionum += $mediaattachments->audio;
                     $linknum += $mediaattachments->link;
                 }
-            $direct_replies = $studentdata->repliestoseed;
-            if($studentdata->maxdepth == 0 && $direct_replies != 0)
-            {
-                $studentdata->maxdepth = 1;
-            }
+                $direct_replies = $studentdata->repliestoseed;
+                if($studentdata->maxdepth == 0 && $direct_replies != 0)
+                {
+                    $studentdata->maxdepth = 1;
+                }
 
-            if ($foravedepth || $direct_replies)
-            { 
-                $studentdata->avedepth = round(((array_sum($foravedepth)+$direct_replies)/ (count($foravedepth)+$direct_replies)), 3);
-	    }
-	    $studentdata->discussion = count($posteddiscussions);
-                /*
-                if($sumtime){
-                    $dif = ceil($sumtime/$studentdata->replies);
-                    $dif_time = gmdate("H:i:s", $dif);
-                    $dif_days = (strtotime(date("Y-m-d", $dif)) - strtotime("1970-01-01")) / 86400;
-                    $studentdata->replytime =  "{$dif_days}days<br>$dif_time";
+                if ($foravedepth || $direct_replies)
+                { 
+                    $studentdata->avedepth = round(((array_sum($foravedepth)+$direct_replies)/ (count($foravedepth)+$direct_replies)), 3);
                 }
-                */
-                // if ($studentdata->replies == 1) {
-                //     $studentdata->replytime = discussion_metrics_format_time($replytimearr[0]);
-                // } elseif ($studentdata->replies == 2) {
-                //     $studentdata->replytime = discussion_metrics_format_time(($replytimearr[1] + $replytimearr[0]) / 2);
-                // } elseif ($studentdata->replies > 2) {
-                //     sort($replytimearr);
-                //     $middleval = floor(($studentdata->posts) / 2);
-                //     if ($studentdata->replies % 2) {
-                //         $studentdata->replytime = discussion_metrics_format_time($replytimearr[$middleval]);
-                //     } else {
-                //         $studentdata->replytime = discussion_metrics_format_time(($replytimearr[$middleval] + $replytimearr[$middleval + 1]) / 2);
-                //     }
-                // }
-                //if($studentdata->maxdepth) $studentdata->avedepth = $depthsum/$threads;
-                //$studentdata->threads = $threads;
-                //対話した相手の人数と国籍
-                list($discsin, $discsparam) = $DB->get_in_or_equal(array_keys($posteddiscussions));
-                $discswhere = "userid <> ? AND discussion {$discsin}";
-                $dparam = ['studentid' => $student->id];
-                $dparam += $discsparam;
-                if ($participants = $DB->get_fieldset_select('forum_posts', 'DISTINCT userid', $discswhere, $dparam)) {
-                    $studentdata->participants = count($participants);
-                    list($partin, $partparam) = $DB->get_in_or_equal($participants);
-                    $countrywhere = "id {$partin}";
-                    $countryids = $DB->get_fieldset_select('user', 'DISTINCT country', $countrywhere, $partparam);
-                    $studentdata->multinationals = count($countryids);
-                }
+                $studentdata->discussion = count($posteddiscussions);
+                    /*
+                    if($sumtime){
+                        $dif = ceil($sumtime/$studentdata->replies);
+                        $dif_time = gmdate("H:i:s", $dif);
+                        $dif_days = (strtotime(date("Y-m-d", $dif)) - strtotime("1970-01-01")) / 86400;
+                        $studentdata->replytime =  "{$dif_days}days<br>$dif_time";
+                    }
+                    */
+                    // if ($studentdata->replies == 1) {
+                    //     $studentdata->replytime = discussion_metrics_format_time($replytimearr[0]);
+                    // } elseif ($studentdata->replies == 2) {
+                    //     $studentdata->replytime = discussion_metrics_format_time(($replytimearr[1] + $replytimearr[0]) / 2);
+                    // } elseif ($studentdata->replies > 2) {
+                    //     sort($replytimearr);
+                    //     $middleval = floor(($studentdata->posts) / 2);
+                    //     if ($studentdata->replies % 2) {
+                    //         $studentdata->replytime = discussion_metrics_format_time($replytimearr[$middleval]);
+                    //     } else {
+                    //         $studentdata->replytime = discussion_metrics_format_time(($replytimearr[$middleval] + $replytimearr[$middleval + 1]) / 2);
+                    //     }
+                    // }
+                    //if($studentdata->maxdepth) $studentdata->avedepth = $depthsum/$threads;
+                    //$studentdata->threads = $threads;
+                    //対話した相手の人数と国籍
+                    list($discsin, $discsparam) = $DB->get_in_or_equal(array_keys($posteddiscussions));
+                    $discswhere = "userid <> ? AND discussion {$discsin}";
+                    $dparam = ['studentid' => $student->id];
+                    $dparam += $discsparam;
+                    if ($participants = $DB->get_fieldset_select('forum_posts', 'DISTINCT userid', $discswhere, $dparam)) {
+                        $studentdata->participants = count($participants);
+                        list($partin, $partparam) = $DB->get_in_or_equal($participants);
+                        $countrywhere = "id {$partin}";
+                        $countryids = $DB->get_fieldset_select('user', 'DISTINCT country', $countrywhere, $partparam);
+                        $studentdata->multinationals = count($countryids);
+                    }
             } else {
                 $studentdata->discussion = 0;
             }
 
+            $engagement = new engagementresult();
+            foreach ($engagementcalculators as $engagementcalculator) {
+                $engagement->add($engagementcalculator->calculate($studentdata->id));
+            }
 
             //View
             $logtable = 'logstore_standard_log';
@@ -277,11 +261,13 @@ class get_student_data
             $studentdata->audionum = $audionum;
             $studentdata->videonum = $videonum;
             $studentdata->linknum = $linknum;
-            $studentdata->levels = $levels;
-            $studentdata->l1 = $levels[0]+ $studentdata->repliestoseed;
-            $studentdata->l2 = $levels[1];
-            $studentdata->l3 = $levels[2];
-            $studentdata->l4 = $levels[3];
+            $studentdata->levels = $engagement->levels;
+            $studentdata->l1 = $engagement->getl1();;
+            $studentdata->l2 = $engagement->getl2();;
+            $studentdata->l3 = $engagement->getl3();;
+            $studentdata->l4 = $engagement->getl4up();;
+            $studentdata->maxdepth = $engagement->getmax();
+            $studentdata->avedepth = $engagement->getaverage();
 
             //First post & Last post
             $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
