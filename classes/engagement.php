@@ -52,7 +52,7 @@ class engagement {
         switch ($method) {
             case static::PERSON_TO_PERSON: return new p2pengagement($discussionid);
             case static::THREAD_TOTAL_COUNT: return new threadcountengagement($discussionid);
-            case static::THREAD_ENGAGEMENT: throw new \moodle_exception('Not implemented method');
+            case static::THREAD_ENGAGEMENT: return new threadengagement($discussionid);
         }
         throw new \moodle_exception('Invalid method');
     }
@@ -342,6 +342,9 @@ class p2pengagement extends engagementcalculator {
     }
 }
 
+/**
+ * Thread Count Engagement
+ */
 class threadcountengagement extends engagementcalculator {
     /**
      * @param int $userid
@@ -374,6 +377,38 @@ class threadcountengagement extends engagementcalculator {
                 $result->increase($count);
             }
             $this->travel($userid, $childpost, $result, $count);
+        }
+    }
+}
+
+/**
+ * Thread Engagement
+ */
+class threadengagement extends engagementcalculator {
+    /**
+     * @param int $userid
+     * @return engagementresult
+     */
+    public function calculate($userid) {
+        $result = new engagementresult();
+        $this->travel($userid, $this->postsdict[$this->firstpost], $result);
+        return $result;
+    }
+
+    /**
+     * @param int $userid
+     * @param engagedpost $post
+     * @param engagementresult $result
+     * @param int $level
+     */
+    public function travel($userid, $post, $result, $level = 1) {
+        foreach ($post->children as $childpost) {
+            if ($childpost->userid != $post->userid && $childpost->userid == $userid) {
+                $result->increase($level);
+                $this->travel($userid, $childpost, $result, $level + 1);
+            } else {
+                $this->travel($userid, $childpost, $result, $level);
+            }
         }
     }
 }
