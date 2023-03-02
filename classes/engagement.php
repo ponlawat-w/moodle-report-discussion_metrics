@@ -51,7 +51,7 @@ class engagement {
     public static function getinstancefrommethod($method, $discussionid) {
         switch ($method) {
             case static::PERSON_TO_PERSON: return new p2pengagement($discussionid);
-            case static::THREAD_TOTAL_COUNT: throw new \moodle_exception('Not implemented method');
+            case static::THREAD_TOTAL_COUNT: return new threadcountengagement($discussionid);
             case static::THREAD_ENGAGEMENT: throw new \moodle_exception('Not implemented method');
         }
         throw new \moodle_exception('Invalid method');
@@ -106,7 +106,7 @@ class engagement {
     /**
      * Add options to form
      *
-     * @param \MoodleQuickForm $mform
+     * @param MoodleQuickForm $mform
      */
     public static function addtoform($mform, $elementname = 'engagementmethod', $defaultvalue = null) {
         $mform->addElement('select', $elementname, get_string('engagement_method', static::COMPONENT), engagement::getselectoptions());
@@ -308,6 +308,9 @@ abstract class engagementcalculator {
     public abstract function calculate($userid);
 }
 
+/**
+ * Person-to-Person Engagement
+ */
 class p2pengagement extends engagementcalculator {
     /**
      * @param int $userid
@@ -335,6 +338,42 @@ class p2pengagement extends engagementcalculator {
                 $result->increase($userengagement[$post->userid]);
             }
             $this->travel($userid, $childpost, $result, $userengagement);
+        }
+    }
+}
+
+class threadcountengagement extends engagementcalculator {
+    /**
+     * @param int $userid
+     * @return engagementresult
+     */
+    public function calculate($userid) {
+        $result = new engagementresult();
+        $threads = $this->postsdict[$this->firstpost]->children;
+        foreach ($threads as $post) {
+            $countinthread = 0;
+            if ($post->userid == $userid && $post->userid != $this->postsdict[$this->firstpost]->userid) {
+                $countinthread++;
+                $result->increase(1);
+            }
+            $this->travel($userid, $post, $result, $countinthread);
+        }
+        return $result;
+    }
+
+    /**
+     * @param int $userid
+     * @param engagedpost $post
+     * @param engagementresult $result
+     * @param int $count
+     */
+    public function travel($userid, $post, $result, &$count) {
+        foreach ($post->children as $childpost) {
+            if ($childpost->userid != $post->userid && $childpost->userid == $userid) {
+                $count++;
+                $result->increase($count);
+            }
+            $this->travel($userid, $childpost, $result, $count);
         }
     }
 }
