@@ -264,6 +264,21 @@ abstract class engagementcalculator {
     }
 
     /**
+     * Get user IDs participated in the discussion
+     *
+     * @return int[]
+     */
+    public function getparticipants() {
+        $results = [];
+        foreach ($this->postsdict as $post) {
+            if (!in_array($post->userid, $results)) {
+                $results[] = $post->userid;
+            }
+        }
+        return $results;
+    }
+
+    /**
      * Get posts from database
      */
     private function getposts() {

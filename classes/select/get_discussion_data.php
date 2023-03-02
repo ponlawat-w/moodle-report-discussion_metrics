@@ -24,7 +24,12 @@
 
 namespace report_discussion_metrics\select;
 
+use engagement;
+use engagementresult;
+
 defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/../engagement.php');
 
 /**
  * The viewed event class.
@@ -37,7 +42,7 @@ class get_discussion_data {
     
     public $data = array();
     
-    public function __construct($courseid, $students, $discussions, $groupid, $starttime = 0, $endtime = 0) {
+    public function __construct($courseid, $students, $discussions, $groupid, $starttime = 0, $endtime = 0, $engagementmethod) {
         global $DB;
         
         if($groupid){
@@ -50,6 +55,7 @@ class get_discussion_data {
         $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
 
         foreach($discussions as $discussion){
+            
             $threads = 0;
             $firstpostdata = $DB->get_record('forum_posts',array('id'=>$discussion->firstpost));
             $firstpost = $firstpostdata->created;
@@ -102,27 +108,6 @@ class get_discussion_data {
                 //Depth
                 $parent = $post->parent;
                 if($parent == $discussion->firstpost) $threads++;
-                if($parent){
-                    //if(!$DB->get_records('forum_posts',array('parent'=>$post->id))){ //Mean that it is last post of the thread
-                        $depth = 0;
-                        while($parent!=0){
-                            if($parentpost = $DB->get_record('forum_posts',array('id'=>$parent))){
-                                $depth++;
-                                $parent = $parentpost->parent;
-                            }
-                        }
-                        if($discussiondata->maxdepth < $depth){
-                            $discussiondata->maxdepth = $depth;
-                        }
-                        $depthsum += $depth;
-                        if($depth<4){
-                            $levels[$depth-1]++;
-                        }else{
-                            $levels[3]++; //Over Level 4
-                        }
-                    //}
-                    $discussiondata->replies++;
-                }
 
                 //TempTimes
                 if($firstpost > $post->created) $firstpost = $post->created;
@@ -130,15 +115,24 @@ class get_discussion_data {
                 $replytimearr[] = $post->created;
             }
 
+            $engagementresult = new engagementresult();
+            $engagementcalculator = engagement::getinstancefrommethod($engagementmethod, $discussion->id);
+            $participants = $engagementcalculator->getparticipants();
+            foreach ($participants as $userid) {
+                $engagementresult->add($engagementcalculator->calculate($userid));
+            }
+
             //if($discussiondata->maxdepth) $discussiondata->avedepth = $depthsum/$threads;
             $discussiondata->threads = $threads;
             //$discussiondata->threadsperstudent = $threads/$groupusernum;
             //$discussiondata->threadspercountry = $threads/$countrynum;
             $discussiondata->levels = $levels;
-            $discussiondata->l1 = $levels[0];
-            $discussiondata->l2 = $levels[1];
-            $discussiondata->l3 = $levels[2];
-            $discussiondata->l4 = $levels[3];
+            $discussiondata->l1 = $engagementresult->getl1();
+            $discussiondata->l2 = $engagementresult->getl2();
+            $discussiondata->l3 = $engagementresult->getl3();
+            $discussiondata->l4 = $engagementresult->getl4up();
+            $discussiondata->maxdepth = $engagementresult->getmax();
+            $discussiondata->avedepth = $engagementresult->getaverage();
             $discussiondata->bereplied = $bereplied;
 
             //Median replytime

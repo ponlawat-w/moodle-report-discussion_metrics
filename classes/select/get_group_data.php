@@ -24,7 +24,12 @@
 
 namespace report_discussion_metrics\select;
 
+use engagement;
+use engagementresult;
+
 defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/../engagement.php');
 
 /**
  * The viewed event class.
@@ -38,7 +43,7 @@ class get_group_data
 
     public $data = array();
 
-    public function __construct($courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $allgroups, $starttime = 0, $endtime = 0, $stale_reply_days)
+    public function __construct($courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $allgroups, $starttime = 0, $endtime = 0, $stale_reply_days, $engagementmethod)
     {
         global $DB;
 
@@ -52,6 +57,10 @@ class get_group_data
             $time_created[$all_replies->id] = $all_replies->created;
         }
         $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
+        $engagementcalculators = [];
+        foreach ($discussions as $discussion) {
+            $engagementcalculators[] = engagement::getinstancefrommethod($engagementmethod, $discussion->id);
+        }
         foreach ($allgroups as $group) {
             $groupdata = new groupdata;
             $groupdata->name = $group->name;
@@ -77,6 +86,8 @@ class get_group_data
             $groupdata->videonum = 0;
             $groupdata->linknum = 0;
             $groupdata->audionum = 0;
+
+            $engagementresult = new engagementresult();
 
             $countries = array();
             if ($groupusers = groups_get_members($group->id)) {
@@ -105,6 +116,10 @@ class get_group_data
                     $studentdata->participants = 0;
                     $studentdata->multinationals = 0;
 
+                    foreach ($engagementcalculators as $engagementcalculator) {
+                        $engagementresult->add($engagementcalculator->calculate($student->id));
+                    }
+
                     $allpostssql = 'SELECT * FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
                     if ($starttime) {
                         $allpostssql = $allpostssql . ' AND created>' . $starttime;
@@ -123,36 +138,6 @@ class get_group_data
                                         $groupdata->self_reply++;
                                     } elseif (strtotime('-' . $stale_reply_days . 'days', $post->created) > ($time_created[$post->parent])) {
                                         $groupdata->stale_reply++;
-                                    } else {
-                                        if (!isset($depths[$post->id])) {
-                                            $parent = $post->parent;
-                                            $depths[$post->id] = 1;
-                                            while ($parent != 0) {
-                                                if ($parentpost = $DB->get_record('forum_posts', array('id' => $parent))) {
-                                                    if ($parentpost->userid == $student->id) {
-                                                        if (isset($depths[$parentpost->id])) {
-                                                            unset($depths[$parentpost->id]);
-                                                        }
-                                                        $depths[$parentpost->id] = 0;
-                                                        $depths[$post->id]++;
-                                                    }
-                                                    $parent = $parentpost->parent;
-                                                    $foravedepth[$post->id] = $depths[$post->id];
-                                                } else {
-                                                    //The parent data has deleted
-                                                    $depths[$post->id] = 0;
-                                                    continue;
-                                                }
-                                            }
-                                            if ($groupdata->maxdepth < $depths[$post->id]) {
-                                                $groupdata->maxdepth = $depths[$post->id];
-                                            }
-                                            if ($depths[$post->id] < 4) {
-                                                $levels[$depths[$post->id] - 1]++;
-                                            } else {
-                                                $levels[3]++; //Over Level 4
-                                            }
-                                        }
                                     }
                                 }
 
@@ -254,16 +239,6 @@ class get_group_data
                     }
                     //Average depth
                     $direct_reply = $groupdata->repliestoseed;
-                    if($groupdata->maxdepth == 0 && $direct_reply != 0)
-                    {
-                        $groupdata->maxdepth = 1;
-                    }
-                    if ($foravedepth)
-                    { 
-                        // $groupdata->avedepth += round((array_sum($foravedepth)+$direct_reply) / (count($foravedepth)+$direct_reply), 3);
-                        $avedepth += array_sum($foravedepth);
-                        $avedepthcount += count($foravedepth);
-                    }  
                     $logtable = 'logstore_standard_log';
                     $eventname = '\\\\mod_forum\\\\event\\\\discussion_viewed';
                     if ($forumid) {
@@ -319,10 +294,6 @@ class get_group_data
                     }
                     $groupdata->users++;
                 }
-                if ($foravedepth || $direct_reply)
-                { 
-                    $groupdata->avedepth = round((($avedepth+$direct_reply)/ ($avedepthcount+$direct_reply)), 3);
-                }
                 //                $id .= "0)";
 
                 // Bl Customization
@@ -345,10 +316,12 @@ class get_group_data
                 
             }
             $this->data[$group->id] = $groupdata;
-            $groupdata->l1 = $levels[0]+$groupdata->repliestoseed;;
-            $groupdata->l2 = $levels[1];
-            $groupdata->l3 = $levels[2];
-            $groupdata->l4 = $levels[3];
+            $groupdata->l1 = $engagementresult->getl1();
+            $groupdata->l2 = $engagementresult->getl2();
+            $groupdata->l3 = $engagementresult->getl3();
+            $groupdata->l4 = $engagementresult->getl4up();
+            $groupdata->maxdepth = $engagementresult->getmax();
+            $groupdata->avedepth = $engagementresult->getaverage();
         }
     }
 }
