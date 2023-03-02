@@ -70,3 +70,5 @@ $string['engagement_threadtotalcount'] = 'Thread Total Count Engagement';
 $string['engagement_threadtotalcount_description'] = 'The engagement level increases each time a user participate in the same thread.';
 $string['engagement_threadengagement'] = 'Thread Engagement';
 $string['engagement_threadengagement_description'] = 'The engagement level increases each time a user participates in a reply where they already participated in the parent posts.';
+
+$string['engagement_admin_defaultmethod'] = 'Default Engagement Calculation Method';

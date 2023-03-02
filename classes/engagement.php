@@ -113,9 +113,10 @@ class engagement {
     public static function addtoform($mform, $elementname = 'engagementmethod', $defaultvalue = null) {
         $mform->addElement('select', $elementname, get_string('engagement_method', static::COMPONENT), engagement::getselectoptions());
         $mform->addHelpButton($elementname, 'engagement_method', static::COMPONENT);
-        if (!is_null($defaultvalue)) {
-            $mform->setDefault($elementname, $defaultvalue);
+        if (is_null($defaultvalue)) {
+            $defaultvalue = get_config('report_discussion_metrics', 'defaultengagementmethod');
         }
+        $mform->setDefault($elementname, $defaultvalue);
     }
 }
 
