@@ -59,7 +59,7 @@ class get_group_data
         $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
         $engagementcalculators = [];
         foreach ($discussions as $discussion) {
-            $engagementcalculators[] = engagement::getinstancefrommethod($engagementmethod, $discussion->id);
+            $engagementcalculators[] = engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
         }
         foreach ($allgroups as $group) {
             $groupdata = new groupdata;

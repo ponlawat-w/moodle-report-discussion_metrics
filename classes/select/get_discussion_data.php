@@ -116,7 +116,7 @@ class get_discussion_data {
             }
 
             $engagementresult = new engagementresult();
-            $engagementcalculator = engagement::getinstancefrommethod($engagementmethod, $discussion->id);
+            $engagementcalculator = engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
             $participants = $engagementcalculator->getparticipants();
             foreach ($participants as $userid) {
                 $engagementresult->add($engagementcalculator->calculate($userid));

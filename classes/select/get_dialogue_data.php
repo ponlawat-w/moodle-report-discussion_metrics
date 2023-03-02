@@ -53,7 +53,7 @@ class get_dialogue_data {
         $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
         $engagementcalculators = [];
         foreach ($discussions as $discussion) {
-            $engagementcalculators[$discussion->id] = engagement::getinstancefrommethod($engagementmethod, $discussion->id);
+            $engagementcalculators[$discussion->id] = engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
         }
         foreach($groups as $group){
             if(!$groupusers = groups_get_members($group->id, 'u.id', 'u.id ASC')){

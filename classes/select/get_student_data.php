@@ -51,7 +51,7 @@ class get_student_data
 
         $engagementcalculators = [];
         foreach ($discussions as $discussion) {
-            $engagementcalculators[] = engagement::getinstancefrommethod($engagementmethod, $discussion->id);
+            $engagementcalculators[] = engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
         }
 
         /*

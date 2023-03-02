@@ -46,13 +46,15 @@ class engagement {
      *
      * @param int $method
      * @param int $discussionid
+     * @param int $starttime
+     * @param int $endtime
      * @return engagementcalculator
      */
-    public static function getinstancefrommethod($method, $discussionid) {
+    public static function getinstancefrommethod($method, $discussionid, $starttime = 0, $endtime = 0) {
         switch ($method) {
-            case static::PERSON_TO_PERSON: return new p2pengagement($discussionid);
-            case static::THREAD_TOTAL_COUNT: return new threadcountengagement($discussionid);
-            case static::THREAD_ENGAGEMENT: return new threadengagement($discussionid);
+            case static::PERSON_TO_PERSON: return new p2pengagement($discussionid, $starttime, $endtime);
+            case static::THREAD_TOTAL_COUNT: return new threadcountengagement($discussionid, $starttime, $endtime);
+            case static::THREAD_ENGAGEMENT: return new threadengagement($discussionid, $starttime, $endtime);
         }
         throw new \moodle_exception('Invalid method');
     }
@@ -125,12 +127,21 @@ class engagedpost {
     public $discussion;
     public $parent;
     public $userid;
+    public $created;
+    /**
+     * True if post satisfies time condition
+     *
+     * @var bool
+     */
+    public $satisfiestime;
     /**
      * Children posts
      *
      * @var engagedpost[]
      */
     public $children;
+
+    public const DB_OUT_FIELDS = 'id,discussion,parent,userid,created';
 }
 
 /**
@@ -251,16 +262,33 @@ abstract class engagementcalculator {
      * @var int
      */
     protected $firstpost;
+    /**
+     * Start timestamp
+     *
+     * @var int
+     */
+    protected $starttime = 0;
+    /**
+     * End timestamp
+     *
+     * @var int
+     */
+    protected $endtime = 0;
 
     /**
      * Constructor
      *
      * @param int $discussionid
+     * @param int $starttime
+     * @param int $endtime
      */
-    public function __construct($discussionid) {
+    public function __construct($discussionid, $starttime = 0, $endtime = 0) {
         $this->discussionid = $discussionid;
+        $this->starttime = $starttime;
+        $this->endtime = $endtime;
         $this->getposts();
         $this->initchildren();
+        $this->checkpoststime();
     }
 
     /**
@@ -283,7 +311,7 @@ abstract class engagementcalculator {
      */
     private function getposts() {
         global $DB;
-        $posts = $DB->get_records('forum_posts', ['discussion' => $this->discussionid]);
+        $posts = $DB->get_records('forum_posts', ['discussion' => $this->discussionid], '', engagedpost::DB_OUT_FIELDS);
         foreach ($posts as $post) {
             $this->postsdict[$post->id] = $post;
             if (!$post->parent) {
@@ -314,6 +342,26 @@ abstract class engagementcalculator {
             }
         }
         return $results;
+    }
+
+    /**
+     * Assign satisfies time property to posts
+     */
+    private function checkpoststime() {
+        foreach ($this->postsdict as $post) {
+            $post->satisfiestime = $this->postsatisfiestime($post);
+        }
+    }
+
+    /**
+     * Test if given post satisfies time condition
+     *
+     * @param engagedpost $post
+     * @return bool
+     */
+    private function postsatisfiestime($post) {
+        return (!$this->starttime || ($post->created >= $this->starttime))
+            && (!$this->endtime || ($post->created <= $this->endtime));
     }
 
     /**
@@ -350,7 +398,9 @@ class p2pengagement extends engagementcalculator {
                     $userengagement[$post->userid] = 0;
                 }
                 $userengagement[$post->userid]++;
-                $result->increase($userengagement[$post->userid]);
+                if ($post->satisfiestime) {
+                    $result->increase($userengagement[$post->userid]);
+                }
             }
             $this->travel($userid, $childpost, $result, $userengagement);
         }
@@ -372,7 +422,9 @@ class threadcountengagement extends engagementcalculator {
             $countinthread = 0;
             if ($post->userid == $userid && $post->userid != $this->postsdict[$this->firstpost]->userid) {
                 $countinthread++;
-                $result->increase(1);
+                if ($post->satisfiestime) {
+                    $result->increase(1);
+                }
             }
             $this->travel($userid, $post, $result, $countinthread);
         }
@@ -419,7 +471,9 @@ class threadengagement extends engagementcalculator {
     public function travel($userid, $post, $result, $level = 1) {
         foreach ($post->children as $childpost) {
             if ($childpost->userid != $post->userid && $childpost->userid == $userid) {
-                $result->increase($level);
+                if ($post->satisfiestime) {
+                    $result->increase($level);
+                }
                 $this->travel($userid, $childpost, $result, $level + 1);
             } else {
                 $this->travel($userid, $childpost, $result, $level);
