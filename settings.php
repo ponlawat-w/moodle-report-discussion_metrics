@@ -34,7 +34,7 @@ if ($hassiteconfig) {
             'report_discussion_metrics/defaultengagementmethod',
             get_string('engagement_admin_defaultmethod', 'report_discussion_metrics'),
             get_string('engagement_method_help', 'report_discussion_metrics'),
-            engagement::THREAD_ENGAGEMENT, engagement::getselectoptions()
+            \report_discussion_metrics\engagement::THREAD_ENGAGEMENT, \report_discussion_metrics\engagement::getselectoptions()
         ));
     }
 }

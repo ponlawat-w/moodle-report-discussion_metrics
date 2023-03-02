@@ -24,9 +24,6 @@
 
 namespace report_discussion_metrics\select;
 
-use engagement;
-use engagementresult;
-
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/../engagement.php');
@@ -51,7 +48,7 @@ class get_student_data
 
         $engagementcalculators = [];
         foreach ($discussions as $discussion) {
-            $engagementcalculators[] = engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
+            $engagementcalculators[] = \report_discussion_metrics\engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
         }
 
         /*
@@ -232,7 +229,7 @@ class get_student_data
                 $studentdata->discussion = 0;
             }
 
-            $engagement = new engagementresult();
+            $engagement = new \report_discussion_metrics\engagementresult();
             foreach ($engagementcalculators as $engagementcalculator) {
                 $engagement->add($engagementcalculator->calculate($studentdata->id));
             }

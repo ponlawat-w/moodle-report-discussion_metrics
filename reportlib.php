@@ -69,7 +69,7 @@ class report_form extends moodleform
 
         $perpage = array('0' => 'All', '10' => '10', '20' => '20', '30' => '30', '50' => '50', '100' => '100');
         
-        engagement::addtoform($mform);
+        \report_discussion_metrics\engagement::addtoform($mform);
 
         //Seedを含むか TODO
         //$mform->addElement('checkbox','containseed','Contains seed post');

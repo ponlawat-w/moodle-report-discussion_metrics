@@ -24,9 +24,6 @@
 
 namespace report_discussion_metrics\select;
 
-use engagement;
-use engagementresult;
-
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/../engagement.php');
@@ -59,7 +56,7 @@ class get_group_data
         $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
         $engagementcalculators = [];
         foreach ($discussions as $discussion) {
-            $engagementcalculators[] = engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
+            $engagementcalculators[] = \report_discussion_metrics\engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
         }
         foreach ($allgroups as $group) {
             $groupdata = new groupdata;
@@ -87,7 +84,7 @@ class get_group_data
             $groupdata->linknum = 0;
             $groupdata->audionum = 0;
 
-            $engagementresult = new engagementresult();
+            $engagementresult = new \report_discussion_metrics\engagementresult();
 
             $countries = array();
             if ($groupusers = groups_get_members($group->id)) {

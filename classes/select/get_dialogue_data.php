@@ -24,9 +24,6 @@
 
 namespace report_discussion_metrics\select;
 
-use engagement;
-use engagementresult;
-
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/../engagement.php');
@@ -53,7 +50,7 @@ class get_dialogue_data {
         $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
         $engagementcalculators = [];
         foreach ($discussions as $discussion) {
-            $engagementcalculators[$discussion->id] = engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
+            $engagementcalculators[$discussion->id] = \report_discussion_metrics\engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
         }
         foreach($groups as $group){
             if(!$groupusers = groups_get_members($group->id, 'u.id', 'u.id ASC')){
@@ -123,7 +120,7 @@ class get_dialogue_data {
                     $replytimearr[] = $post->created;
                 }
 
-                $engagementresult = new engagementresult();
+                $engagementresult = new \report_discussion_metrics\engagementresult();
                 foreach ($groupusers as $user) {
                     $engagementresult->add($engagementcalculators[$discussion->id]->calculate($user->id));
                 }
