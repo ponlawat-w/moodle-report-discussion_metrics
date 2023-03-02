@@ -43,7 +43,7 @@ class get_student_data
 
     public $data = array();
 
-    public function __construct($students, $courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $starttime = 0, $endtime = 0, $stale_reply_days)
+    public function __construct($students, $courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $starttime = 0, $endtime = 0, $stale_reply_days, $engagementmethod)
     {
         global $DB;
 
@@ -51,7 +51,7 @@ class get_student_data
 
         $engagementcalculators = [];
         foreach ($discussions as $discussion) {
-            $engagementcalculators[] = engagement::getinstancefrommethod(engagement::PERSON_TO_PERSON, $discussion->id);
+            $engagementcalculators[] = engagement::getinstancefrommethod($engagementmethod, $discussion->id);
         }
 
         /*

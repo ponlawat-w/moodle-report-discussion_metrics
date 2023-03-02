@@ -137,6 +137,7 @@ if (isset($onlygroupworks)) {
     $paramstr .= '&onlygroupworks=' . $onlygroupworks;
     $params['onlygroupworks'] = $onlygroupworks;
 }
+$engagementmethod = $fromform->engagementmethod;
 $mform->set_data($params);
 
 $PAGE->set_pagelayout('incourse');
@@ -229,7 +230,7 @@ if ($type || $tsort || $treset || $page) {
     $table->set_attribute('class', 'admintable generaltable');
     $table->set_attribute('id', 'discussionmetrixreporttable');
     if ($type == 1) {
-        $studentdata = new report_discussion_metrics\select\get_student_data($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime, $stale_reply_days);
+        $studentdata = new report_discussion_metrics\select\get_student_data($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime, $stale_reply_days, $engagementmethod);
         $data = $studentdata->data;
         $table->define_columns(array('firstname', 'lastname', 'country', 'institution', 'group', 'discussion', 'participants', 'multinational', 'posts', 'replies', 'stale_reply', 'self_reply', 'repliestoseed', 'l1', 'l2', 'l3', 'l4', 'maxdepth', 'avedepth', 'wordcount', 'views', 'imagenum', 'videonum', 'audionum', 'linknum'));
         $table->define_headers(array('Firstname', 'Surname',  $strcounrty, $strinstituion, $strgroup, 'Total discussion joined',  'Total discussion participants', 'Total Nationalities', $strposts, $strreplies, $strstale, $strself, $strdirect, 'E#1', 'E#2', 'E#3', 'E#4+', 'Max E', 'Average E', $strwordcount, $strviews, '#image', '#video', '#audio', '#link'));

@@ -1,5 +1,6 @@
 <?php
 require_once("$CFG->libdir/formslib.php");
+require_once(__DIR__ . '/classes/engagement.php');
 
 class report_form extends moodleform
 {
@@ -67,7 +68,8 @@ class report_form extends moodleform
         */
 
         $perpage = array('0' => 'All', '10' => '10', '20' => '20', '30' => '30', '50' => '50', '100' => '100');
-        $mform->addElement('select', 'pagesize', "Reports per page", $perpage);
+        
+        engagement::addtoform($mform);
 
         //Seedを含むか TODO
         //$mform->addElement('checkbox','containseed','Contains seed post');

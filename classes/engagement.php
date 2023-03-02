@@ -23,7 +23,7 @@ class engagement {
     private const COMPONENT = 'report_discussion_metrics';
     public const PERSON_TO_PERSON = 1;
     public const THREAD_TOTAL_COUNT = 2;
-    public const THREAD_ENGAGEMENT = 2;
+    public const THREAD_ENGAGEMENT = 3;
 
     /**
      * Get string of calculation method
@@ -51,8 +51,8 @@ class engagement {
     public static function getinstancefrommethod($method, $discussionid) {
         switch ($method) {
             case static::PERSON_TO_PERSON: return new p2pengagement($discussionid);
-            case static::THREAD_TOTAL_COUNT: throw new \moodle_exception('Invalid method');
-            case static::THREAD_ENGAGEMENT: throw new \moodle_exception('Invalid method');
+            case static::THREAD_TOTAL_COUNT: throw new \moodle_exception('Not implemented method');
+            case static::THREAD_ENGAGEMENT: throw new \moodle_exception('Not implemented method');
         }
         throw new \moodle_exception('Invalid method');
     }
@@ -88,6 +88,32 @@ class engagement {
             static::THREAD_TOTAL_COUNT,
             static::THREAD_ENGAGEMENT
         ];
+    }
+
+    /**
+     * Get select options for form
+     *
+     * @return array
+     */
+    public static function getselectoptions() {
+        $options = [];
+        foreach (static::getallmethods() as $option) {
+            $options[$option] = static::getname($option);
+        }
+        return $options;
+    }
+
+    /**
+     * Add options to form
+     *
+     * @param \MoodleQuickForm $mform
+     */
+    public static function addtoform($mform, $elementname = 'engagementmethod', $defaultvalue = null) {
+        $mform->addElement('select', $elementname, get_string('engagement_method', static::COMPONENT), engagement::getselectoptions());
+        $mform->addHelpButton($elementname, 'engagement_method', static::COMPONENT);
+        if (!is_null($defaultvalue)) {
+            $mform->setDefault($elementname, $defaultvalue);
+        }
     }
 }
 

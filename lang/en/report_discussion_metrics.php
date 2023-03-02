@@ -62,6 +62,8 @@ $string['sentreminder'] = 'Sent a reminder.';
 //log
 $string['eventreportviewed'] = 'Discussion Metrics viewed';
 
+$string['engagement_method'] = 'Engagement Method';
+$string['engagement_method_help'] = '<p>Engagement Calculation Method</p><strong>Person-to-Person Engagement:</strong> The engagement level increases each time a user replies to the same user in the same thread.<br><strong>Thread Total Count Engagement:</strong> The engagement level increases each time a user participate in the same thread.<br><strong>Thread Engagement:</strong> The engagement level increases each time a user participates in a reply where they already participated in the parent posts.';
 $string['engagement_persontoperson'] = 'Person-to-Person Engagement';
 $string['engagement_persontoperson_description'] = 'The engagement level increases each time a user replies to the same user in the same thread.';
 $string['engagement_threadtotalcount'] = 'Thread Total Count Engagement';
