@@ -137,7 +137,7 @@ if (isset($onlygroupworks)) {
     $paramstr .= '&onlygroupworks=' . $onlygroupworks;
     $params['onlygroupworks'] = $onlygroupworks;
 }
-$engagementmethod = $fromform->engagementmethod;
+$engagementmethod = isset($fromform->engagementmethod) ? $fromform->engagementmethod : get_config('report_discussion_metrics', 'defaultengagementmethod');
 $mform->set_data($params);
 
 $PAGE->set_pagelayout('incourse');
