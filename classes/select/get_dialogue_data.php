@@ -39,7 +39,7 @@ class get_dialogue_data {
     
     public $data = array();
     
-    public function __construct($courseid,$discussions,$groups=NULL,$starttime=0,$endtime=0, $engagementmethod){
+    public function __construct($courseid, $discussions, $groups, $starttime, $endtime, $engagementmethod){
         global $DB;
         if (!isset($countries)) {
             $countries = [];

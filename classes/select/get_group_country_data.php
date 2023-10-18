@@ -38,7 +38,7 @@ class get_group_country_data
 
     public $data = array();
 
-    public function __construct($students, $courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $allgroups = NULL, $starttime = 0, $endtime = 0)
+    public function __construct($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $allgroups, $starttime = 0, $endtime = 0)
     {
         global $DB;
         $countries = get_string_manager()->get_list_of_countries();
@@ -194,7 +194,7 @@ class get_group_country_data
                     $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
                     if ($allposts) {
 
-                        $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
+                        $firstpostsql = 'SELECT MIN(created) mincreated FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
                         if ($starttime) {
                             $firstpostsql = $firstpostsql . ' AND created>' . $starttime;
                         }
@@ -202,13 +202,12 @@ class get_group_country_data
                             $firstpostsql = $firstpostsql . ' AND created<' . $endtime;
                         }
                         $firstpost = $DB->get_record_sql($firstpostsql);
-                        $minstr = 'min(created)'; //
-                        $firstpostdate = userdate($firstpost->$minstr);
+                        $firstpostdate = userdate($firstpost->mincreated);
                         if (!@$groupcountrydata->firstpost || $groupcountrydata->firstpost > $firstpostdate) {
                             $groupcountrydata->firstpost =  $firstpostdate;
                         }
 
-                        $lastpostsql = 'SELECT MAX(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
+                        $lastpostsql = 'SELECT MAX(created) maxcreated FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
                         if ($starttime) {
                             $lastpostsql = $lastpostsql . ' AND created>' . $starttime;
                         }
@@ -216,8 +215,7 @@ class get_group_country_data
                             $lastpostsql = $lastpostsql . ' AND created<' . $endtime;
                         }
                         $lastpost = $DB->get_record_sql($lastpostsql);
-                        $maxstr = 'max(created)'; //
-                        $lastpostdate = userdate($lastpost->$maxstr);
+                        $lastpostdate = userdate($lastpost->maxcreated);
                         if (!@$groupcountrydata->lastpost || $groupcountrydata->lastpost < $lastpostdate) {
                             $groupcountrydata->lastpost =  $lastpostdate;
                         }
