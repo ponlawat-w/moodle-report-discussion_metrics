@@ -40,7 +40,7 @@ class get_student_data
 
     public $data = array();
 
-    public function __construct($students, $courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $starttime = 0, $endtime = 0, $stale_reply_days, $engagementmethod)
+    public function __construct($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime, $stale_reply_days, $engagementmethod)
     {
         global $DB;
 
@@ -57,7 +57,7 @@ class get_student_data
         }
         */
         $time_created = array();
-        $all_reply = $DB->get_records_sql("SELECT * FROM {forum_posts} WHERE `parent`>0");
+        $all_reply = $DB->get_records_sql('SELECT * FROM {forum_posts} WHERE parent > 0');
         $userids = array();
         foreach ($all_reply as $all_replies) {
             $userids[$all_replies->id] = $all_replies->userid;
@@ -267,10 +267,9 @@ class get_student_data
             $studentdata->avedepth = $engagement->getaverage();
 
             //First post & Last post
-            $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
             if ($allposts) {
 
-                $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
+                $firstpostsql = 'SELECT MIN(created) mincreated FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
                 if ($starttime) {
                     $firstpostsql = $firstpostsql . ' AND created>' . $starttime;
                 }
@@ -278,12 +277,11 @@ class get_student_data
                     $firstpostsql = $firstpostsql . ' AND created<' . $endtime;
                 }
                 $firstpost = $DB->get_record_sql($firstpostsql);
-                $minstr = 'min(created)'; //
-                $firstpostdate = userdate($firstpost->$minstr);
+                $firstpostdate = userdate($firstpost->mincreated);
                 $studentdata->firstpost = $firstpostdate;
 
 
-                $lastpostsql = 'SELECT MAX(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
+                $lastpostsql = 'SELECT MAX(created) maxcreated FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
                 if ($starttime) {
                     $lastpostsql = $lastpostsql . ' AND created>' . $starttime;
                 }
@@ -291,8 +289,7 @@ class get_student_data
                     $lastpostsql = $lastpostsql . ' AND created<' . $endtime;
                 }
                 $lastpost = $DB->get_record_sql($lastpostsql);
-                $maxstr = 'max(created)'; //
-                $lastpostdate = userdate($lastpost->$maxstr);
+                $lastpostdate = userdate($lastpost->maxcreated);
                 $studentdata->lastpost = $lastpostdate;
             } else {
                 $studentdata->firstpost = '-';
