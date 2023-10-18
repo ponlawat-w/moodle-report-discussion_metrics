@@ -40,7 +40,7 @@ class get_group_data
 
     public $data = array();
 
-    public function __construct($courseid, $forumid = NULL, $discussions, $discussionarray, $firstposts, $allgroups, $starttime = 0, $endtime = 0, $stale_reply_days, $engagementmethod)
+    public function __construct($courseid, $forumid, $discussions, $discussionarray, $firstposts, $allgroups, $starttime, $endtime, $stale_reply_days, $engagementmethod)
     {
         global $DB;
 
@@ -48,7 +48,7 @@ class get_group_data
             $allgroups = groups_get_all_groups($courseid);
         }
         $userids = array();
-        $all_reply = $DB->get_records_sql("SELECT * FROM {forum_posts} WHERE `parent`>0");
+        $all_reply = $DB->get_records_sql("SELECT * FROM {forum_posts} WHERE parent > 0");
         foreach ($all_reply as $all_replies) {
             $userids[$all_replies->id] = $all_replies->userid;
             $time_created[$all_replies->id] = $all_replies->created;
@@ -258,7 +258,7 @@ class get_group_data
                     $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
                     if ($allposts) {
 
-                        $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
+                        $firstpostsql = 'SELECT MIN(created) mincreated FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
                         if ($starttime) {
                             $firstpostsql = $firstpostsql . ' AND created>' . $starttime;
                         }
@@ -266,13 +266,12 @@ class get_group_data
                             $firstpostsql = $firstpostsql . ' AND created<' . $endtime;
                         }
                         $firstpost = $DB->get_record_sql($firstpostsql);
-                        $minstr = 'min(created)'; //
-                        $firstpostdate = userdate($firstpost->$minstr);
+                        $firstpostdate = userdate($firstpost->mincreated);
                         if (!@$groupdata->firstpost || $groupdata->firstpost > $firstpostdate) {
                             $groupdata->firstpost =  $firstpostdate;
                         }
 
-                        $lastpostsql = 'SELECT MAX(created) FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
+                        $lastpostsql = 'SELECT MAX(created) maxcreated FROM {forum_posts} WHERE userid=' . $student->id . ' AND discussion IN ' . $discussionarray;
                         if ($starttime) {
                             $lastpostsql = $lastpostsql . ' AND created>' . $starttime;
                         }
@@ -280,8 +279,7 @@ class get_group_data
                             $lastpostsql = $lastpostsql . ' AND created<' . $endtime;
                         }
                         $lastpost = $DB->get_record_sql($lastpostsql);
-                        $maxstr = 'max(created)'; //
-                        $lastpostdate = userdate($lastpost->$maxstr);
+                        $lastpostdate = userdate($lastpost->maxcreated);
                         if (!@$groupdata->lastpost || $groupdata->lastpost < $lastpostdate) {
                             $groupdata->lastpost =  $lastpostdate;
                         }
