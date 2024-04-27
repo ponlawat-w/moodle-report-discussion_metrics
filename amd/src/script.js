@@ -42,13 +42,15 @@ define(['jquery'], function ($) {
                     }
                     var stale_reply_days = $('#id_stale_reply_days').val();
                     const engagementmethod = $('#id_engagementmethod').val();
+                    const engagementinternational = $('#id_engagementinternational').prop('checked');
                     var courseid = $('#courseid1').val();
                     window.location.replace(
                         'download.php?type=' + type + '&forum=' + forum +
                         '&group=' + group + '&starttime=' + starttime +
                         '&endtime=' + endtime + '&stale_reply_days=' + stale_reply_days +
                         '&course=' + courseid + '&grouping=' + grouping +
-                        '&onlygroupworks=' + onlygroupworks + '&engagementmethod=' + engagementmethod
+                        '&onlygroupworks=' + onlygroupworks + '&engagementmethod=' + engagementmethod +
+                        '&engagementinternational=' + (engagementinternational ? 1 : 0)
                     );
                 });
             });

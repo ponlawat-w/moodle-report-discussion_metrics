@@ -39,7 +39,7 @@ class get_dialogue_data {
     
     public $data = array();
     
-    public function __construct($courseid, $discussions, $groups, $starttime, $endtime, $engagementmethod){
+    public function __construct($courseid, $discussions, $groups, $starttime, $endtime, $engagementmethod, $engagementinternational){
         global $DB;
         if (!isset($countries)) {
             $countries = [];
@@ -50,7 +50,7 @@ class get_dialogue_data {
         $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
         $engagementcalculators = [];
         foreach ($discussions as $discussion) {
-            $engagementcalculators[$discussion->id] = \report_discussion_metrics\engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
+            $engagementcalculators[$discussion->id] = \report_discussion_metrics\engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime, $engagementinternational);
         }
         foreach($groups as $group){
             if(!$groupusers = groups_get_members($group->id, 'u.id', 'u.id ASC')){

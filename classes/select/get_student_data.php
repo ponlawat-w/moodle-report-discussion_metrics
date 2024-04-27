@@ -40,7 +40,7 @@ class get_student_data
 
     public $data = array();
 
-    public function __construct($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime, $stale_reply_days, $engagementmethod)
+    public function __construct($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime, $stale_reply_days, $engagementmethod, $engagementinternational)
     {
         global $DB;
 
@@ -48,7 +48,7 @@ class get_student_data
 
         $engagementcalculators = [];
         foreach ($discussions as $discussion) {
-            $engagementcalculators[] = \report_discussion_metrics\engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
+            $engagementcalculators[] = \report_discussion_metrics\engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime, $engagementinternational);
         }
 
         /*

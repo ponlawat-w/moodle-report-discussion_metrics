@@ -40,7 +40,7 @@ class get_group_data
 
     public $data = array();
 
-    public function __construct($courseid, $forumid, $discussions, $discussionarray, $firstposts, $allgroups, $starttime, $endtime, $stale_reply_days, $engagementmethod)
+    public function __construct($courseid, $forumid, $discussions, $discussionarray, $firstposts, $allgroups, $starttime, $endtime, $stale_reply_days, $engagementmethod, $engagementinternational)
     {
         global $DB;
 
@@ -56,7 +56,7 @@ class get_group_data
         $discussionmodcontextidlookup = report_discussion_metrics_getdiscussionmodcontextidlookup($courseid);
         $engagementcalculators = [];
         foreach ($discussions as $discussion) {
-            $engagementcalculators[] = \report_discussion_metrics\engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
+            $engagementcalculators[] = \report_discussion_metrics\engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime, $engagementinternational);
         }
         foreach ($allgroups as $group) {
             $groupdata = new groupdata;

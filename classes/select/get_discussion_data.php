@@ -39,7 +39,7 @@ class get_discussion_data {
     
     public $data = array();
     
-    public function __construct($courseid, $students, $discussions, $groupid, $starttime = 0, $endtime = 0, $engagementmethod) {
+    public function __construct($courseid, $students, $discussions, $groupid, $starttime = 0, $endtime = 0, $engagementmethod, $engagementinternational) {
         global $DB;
         
         if($groupid){
@@ -113,7 +113,7 @@ class get_discussion_data {
             }
 
             $engagementresult = new \report_discussion_metrics\engagementresult();
-            $engagementcalculator = \report_discussion_metrics\engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime);
+            $engagementcalculator = \report_discussion_metrics\engagement::getinstancefrommethod($engagementmethod, $discussion->id, $starttime, $endtime, $engagementinternational);
             $participants = $engagementcalculator->getparticipants();
             foreach ($participants as $userid) {
                 $engagementresult->add($engagementcalculator->calculate($userid));

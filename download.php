@@ -14,6 +14,7 @@ $endtime = optional_param('endtime', '', PARAM_RAW);
 $onlygroupworks = optional_param('onlygroupworks', 0, PARAM_INT);
 $stale_reply_days = optional_param('stale_reply_days', 0, PARAM_INT);
 $engagementmethod = required_param('engagementmethod', PARAM_INT);
+$engagementinternational = required_param('engagementinternational', PARAM_INT) ? true : false;
 
 $course = $DB->get_record('course', array('id' => $courseid));
 require_course_login($course);
@@ -131,7 +132,7 @@ $csvexport = new \csv_export_writer();
 $filename = 'discussion_metrics';
 $csvexport->set_filename($filename);
 if ($type == 1) {
-    $studentdata = new report_discussion_metrics\select\get_student_data($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime, $stale_reply_days, $engagementmethod);
+    $studentdata = new report_discussion_metrics\select\get_student_data($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime, $stale_reply_days, $engagementmethod, $engagementinternational);
     $data = $studentdata->data;
     //    $csvexport->add_data(array($strname, $strgroup, $strcounrty, $strinstituion, 'Discussion', $strposts, $strreplies, $strinternational, $strdomestic, $strself, $strstale, 'Replies to seed', 'Reply Time(s)', '#L1', '#L2', '#L3', '#L4', 'Max depth', 'Average depth', $strwordcount, $strviews, $strmultimedia, '#image', '#video', '#audio', '#link', 'Participants', 'Multinational'));
     $csvexport->add_data(array('Firstname', 'Surname',  $strcounrty, $strinstituion, $strgroup, 'Total discussion joined',  'Total discussion participants', 'Total Nationalities', $strposts, $strreplies, $strstale, $strself, $strdirect, 'E#1', 'E#2', 'E#3', 'E#4+', 'Max E', 'Average E', $strwordcount, $strviews, '#image', '#video', '#audio', '#link'));
@@ -141,7 +142,7 @@ if ($type == 1) {
         $csvexport->add_data($line);
     }
 } elseif ($type == 2) { //Goupごと
-    $groupdata = new report_discussion_metrics\select\get_group_data($courseid, $forumid, $discussions, $discussionarray, $firstposts, $groups, $starttime, $endtime, $stale_reply_days, $engagementmethod);
+    $groupdata = new report_discussion_metrics\select\get_group_data($courseid, $forumid, $discussions, $discussionarray, $firstposts, $groups, $starttime, $endtime, $stale_reply_days, $engagementmethod, $engagementinternational);
     $data = $groupdata->data;
 
     //    $csvexport->add_data(array('name', 'users', 'multinationals', 'repliestoseed', 'replies', $strinternational, $strdomestic, $strself, $strstale,'#E1','#E2','#E3','#E4','Max E','Average E', 'repliedusers', 'notrepliedusers', 'wordcount', 'views', 'multimedia',$strimage,$straudio,$strlink,$strvideo));
@@ -152,7 +153,7 @@ if ($type == 1) {
         $csvexport->add_data($line);
     }
 } elseif ($type == 3) { //Dialogue(discussion)の集計
-    $discussiondata = new report_discussion_metrics\select\get_discussion_data($courseid, $students, $discussions, $groupid, $starttime, $endtime, $engagementmethod);
+    $discussiondata = new report_discussion_metrics\select\get_discussion_data($courseid, $students, $discussions, $groupid, $starttime, $endtime, $engagementmethod, $engagementinternational);
     $data = $discussiondata->data;
     $csvexport->add_data(array('forumname', 'name', 'posts', 'bereplied', 'threads', 'maxdepth', 'l1', 'l2', 'l3', 'l4', 'multimedia', 'replytime', 'density'));
     foreach ($data as $row) {
@@ -160,7 +161,7 @@ if ($type == 1) {
         $csvexport->add_data($line);
     }
 } elseif ($type == 4) { //DialogueをGroupごと
-    $dialoguedata = new report_discussion_metrics\select\get_dialogue_data($courseid, $discussions, $groups, $starttime, $endtime, $engagementmethod);
+    $dialoguedata = new report_discussion_metrics\select\get_dialogue_data($courseid, $discussions, $groups, $starttime, $endtime, $engagementmethod, $engagementinternational);
     $data = $dialoguedata->data;
     $csvexport->add_data(array('groupname', 'forumname', 'name', 'posts', 'bereplied', $strdirect, 'l1', 'l2', 'l3', 'l4', 'multimedia', 'replytime', 'density'));
     foreach ($data as $row) {

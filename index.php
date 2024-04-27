@@ -138,6 +138,7 @@ if (isset($onlygroupworks)) {
     $params['onlygroupworks'] = $onlygroupworks;
 }
 $engagementmethod = isset($fromform->engagementmethod) ? $fromform->engagementmethod : get_config('report_discussion_metrics', 'defaultengagementmethod');
+$engagementinternational = isset($fromform->engagementinternational) ? $fromform->engagementinternational : false;
 $mform->set_data($params);
 
 $PAGE->set_pagelayout('incourse');
@@ -230,7 +231,7 @@ if ($type || $tsort || $treset || $page) {
     $table->set_attribute('class', 'admintable generaltable');
     $table->set_attribute('id', 'discussionmetrixreporttable');
     if ($type == 1) {
-        $studentdata = new report_discussion_metrics\select\get_student_data($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime, $stale_reply_days, $engagementmethod);
+        $studentdata = new report_discussion_metrics\select\get_student_data($students, $courseid, $forumid, $discussions, $discussionarray, $firstposts, $starttime, $endtime, $stale_reply_days, $engagementmethod, $engagementinternational);
         $data = $studentdata->data;
         $table->define_columns(array('firstname', 'lastname', 'country', 'institution', 'group', 'discussion', 'participants', 'multinational', 'posts', 'replies', 'stale_reply', 'self_reply', 'repliestoseed', 'l1', 'l2', 'l3', 'l4', 'maxdepth', 'avedepth', 'wordcount', 'views', 'imagenum', 'videonum', 'audionum', 'linknum'));
         $table->define_headers(array('Firstname', 'Surname',  $strcounrty, $strinstituion, $strgroup, 'Total discussion joined',  'Total discussion participants', 'Total Nationalities', $strposts, $strreplies, $strstale, $strself, $strdirect, 'E#1', 'E#2', 'E#3', 'E#4+', 'Max E', 'Average E', $strwordcount, $strviews, '#image', '#video', '#audio', '#link'));
@@ -260,7 +261,7 @@ if ($type || $tsort || $treset || $page) {
         }
     } elseif ($type == 2) { //Goupごと
 
-        $groupdata = new report_discussion_metrics\select\get_group_data($courseid, $forumid, $discussions, $discussionarray, $firstposts, $groups, $starttime, $endtime, $stale_reply_days, $engagementmethod);
+        $groupdata = new report_discussion_metrics\select\get_group_data($courseid, $forumid, $discussions, $discussionarray, $firstposts, $groups, $starttime, $endtime, $stale_reply_days, $engagementmethod, $engagementinternational);
         $data = $groupdata->data;
         $table->define_columns(array('name', 'repliedusers', 'notrepliedusers', 'discussion', 'users', 'posts', 'replies', 'multinationals', 'stale_reply', 'self_reply', 'r2ndpost', 'l1', 'l2', 'l3', 'l4', 'maxe', 'avge', 'wordcount', 'views', 'image', 'video', 'audio', 'link'));
         $table->define_headers(array($strgroup, '# of active members', '# of inactive members', 'Total discussion joined', 'Total discussion participants', $strposts, 'Total Replies', 'Total nationalities', $strstale, $strself, $strdirect, '#E1', '#E2', '#E3', '#E4', 'Max E', 'Average E', $strwordcount, $strviews, $strimage, $strvideo, $straudio, $strlink));
@@ -279,7 +280,7 @@ if ($type || $tsort || $treset || $page) {
         }
     } elseif ($type == 3) { //Dialogue(discussion)の集計
         //$discussiondata = new report_discussion_metrics\select\get_discussion_data($students,$courseid,$forumid,$groupfilter,$starttime,$endtime);
-        $discussiondata = new report_discussion_metrics\select\get_discussion_data($courseid, $students, $discussions, $groupid, $starttime, $endtime, $engagementmethod);
+        $discussiondata = new report_discussion_metrics\select\get_discussion_data($courseid, $students, $discussions, $groupid, $starttime, $endtime, $engagementmethod, $engagementinternational);
         $data = $discussiondata->data;
         $table->define_columns(array('forumname', 'name', 'posts', 'bereplied', 'international_reply', 'domestic_reply', 'self_reply', 'threads', 'maxdepth', 'l1', 'l2', 'l3', 'l4', 'multimedia', 'replytime', 'density'));
         $table->define_headers(array("Forum", 'Discussion', '#posts', '#been replied to', $strinternational, $strdomestic, $strself, '#threads', 'Max depth', '#L1', '#L2', '#L3', '#L4', '#multimedia', 'Reply time', 'Density'));
@@ -298,7 +299,7 @@ if ($type || $tsort || $treset || $page) {
         }
     } elseif ($type == 4) { //DialogueをGroupごと
         //$dialoguedata = new report_discussion_metrics\select\get_dialogue_data($courseid,$forumid,$groupfilter,$starttime,$endtime);
-        $dialoguedata = new report_discussion_metrics\select\get_dialogue_data($courseid, $discussions, $groups, $starttime, $endtime, $engagementmethod);
+        $dialoguedata = new report_discussion_metrics\select\get_dialogue_data($courseid, $discussions, $groups, $starttime, $endtime, $engagementmethod, $engagementinternational);
         $data = $dialoguedata->data;
         $table->define_columns(array('groupname', 'forumname', 'name', 'posts', 'bereplied', 'threads', 'l1', 'l2', 'l3', 'l4', 'multimedia', 'replytime', 'density'));
         $table->define_headers(array('Group', "Forum", 'Discussion', '#post', '#been replied to', $strdirect, '#L1', '#L2', '#L3', '#L4', '#multimedia', 'Reply time', 'Density'));
